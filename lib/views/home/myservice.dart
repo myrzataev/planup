@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -318,47 +319,51 @@ class _OutfitScreenState extends State<OutfitScreen> {
         ),
         body: Column(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  onPressed: () async {
-                    DateTime? pickedDate = await showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2101),
-                      locale: const Locale('ru', 'RU'),
-                    );
-                    if (pickedDate != null) {
-                      filterWorkOrdersByDate(pickedDate);
-                    }
-                  },
-                  child: Text(selectedDate == null ? "Выбрать дату" : "Дата: ${DateFormat('dd.MM').format(selectedDate!)}"),
-                ),
-                DropdownButton<String>(
-                  value: selectedStatus,
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      selectedStatus = newValue;
-                      filterWorkOrdersByStatus(newValue);
-                    });
-                  },
-                  items: statusList.map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    filterTodayWorkOrders();
-                  },
-                  child: Text('Сегодня'),
-                ),
-
-              ],
+            
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  ElevatedButton(
+                    onPressed: () async {
+                      DateTime? pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2101),
+                        locale: const Locale('ru', 'RU'),
+                      );
+                      if (pickedDate != null) {
+                        filterWorkOrdersByDate(pickedDate);
+                      }
+                    },
+                    child: Text(selectedDate == null ? "Выбрать дату" : "Дата: ${DateFormat('dd.MM').format(selectedDate!)}"),
+                  ),
+                  DropdownButton<String>(
+                    value: selectedStatus,
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedStatus = newValue;
+                        filterWorkOrdersByStatus(newValue);
+                      });
+                    },
+                    items: statusList.map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      filterTodayWorkOrders();
+                    },
+                    child: Text('Сегодня'),
+                  ),
+              
+                ],
+              ),
             ),
 
             Expanded(

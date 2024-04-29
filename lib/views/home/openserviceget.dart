@@ -11,6 +11,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:gallery_saver/gallery_saver.dart';
 import 'package:planup/views/home/openservice.dart';
+import 'package:planup/views/home/viewimage.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Getopenservice extends StatefulWidget {
@@ -328,7 +329,7 @@ class _GetopenserviceState extends State<Getopenservice> {
 
   void _showImageView(String imageUrl) {
     Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => ImageViewPage(imageUrl: imageUrl),
+      builder: (context) => ImageViewPage(urlOfWeb: imageUrl),
     ));
   }
 

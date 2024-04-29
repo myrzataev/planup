@@ -654,7 +654,7 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
 
   void _showImageView(String imageUrl) {
     Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => ImageViewPage(imageUrl: imageUrl),
+      builder: (context) => ImageViewPage(urlOfWeb: imageUrl,),
     ));
   }
   Future<void> _start() async {
