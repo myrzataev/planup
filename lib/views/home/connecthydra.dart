@@ -146,7 +146,7 @@ class _HydraConnectState extends State<HydraConnect> {
 
 
 
-    final Uri uri = Uri.parse('http://185.39.79.79:8000/accounts/auto-connetction/');
+    final Uri uri = Uri.parse('http://185.39.79.84:8000/accounts/auto-connetction/');
     Map<String, dynamic> requestBody = {
 
       "mac_address":"$macAddress",
@@ -213,7 +213,7 @@ class _HydraConnectState extends State<HydraConnect> {
 
 
 
-    final Uri uri = Uri.parse('http://185.39.79.79:8000/accounts/manual-input/');
+    final Uri uri = Uri.parse('http://185.39.79.84:8000/accounts/manual-input/');
     Map<String, dynamic> requestBody = {
 
       'mac_address': macAddress,
@@ -360,13 +360,16 @@ class _HydraConnectState extends State<HydraConnect> {
               } else if (newValue.text.length == 2 || newValue.text.length == 5 || newValue.text.length == 8 || newValue.text.length == 11 || newValue.text.length == 14) {
                 // Добавляем двоеточие после каждых двух символов, кроме последнего двоеточия
                 return TextEditingValue(
-                  text: '${newValue.text.toUpperCase()}:',
+                  text: '${newValue.text.toLowerCase()}:',
                   selection: TextSelection.collapsed(offset: newValue.text.length + 1),
                 );
               }
               return newValue;
             }),
           ],
+          // onChanged: (value) {
+          //   print(value);
+          // },
           onChanged: (value) {
             bool isValid = value.length == 17;
             if (isMacAddressValid != isValid) {

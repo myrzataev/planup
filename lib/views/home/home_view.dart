@@ -752,11 +752,14 @@ class _HomeViewState extends State<HomeView> {
                           ),
                         ]),
                   ),
-                  // ElevatedButton(onPressed: ()async {
-                  //   final SharedPreferences preferences = await SharedPreferences.getInstance();
-                  //   print(preferences.getInt("squares_id"));
+                  ElevatedButton(onPressed: ()async {
+                    FlutterSecureStorage storage = const FlutterSecureStorage();
 
-                  // }, child: Text("fsdf"))
+                    final SharedPreferences preferences = await SharedPreferences.getInstance();
+                    final user_id = await storage.read(key: "user_id");
+                    print(preferences.getInt("user_id"));
+                    print(user_id);
+                  }, child: Text("fsdf"))
                 ],
               ),
             ),
