@@ -23,7 +23,7 @@ class _OpenServiceState extends State<OpenService> {
   DateTime? selectedDate;
   bool _isInit = true;
   bool _isLoading = false;
-
+   List<dynamic> lsNumbers = [];
   @override
   void initState() {
     super.initState();
@@ -194,6 +194,15 @@ class _OpenServiceState extends State<OpenService> {
       }
     });
   }
+    void filterWorkOrdersByLsNumber(String? searchQuery) {
+    setState(() {
+      if (searchQuery == null || searchQuery.isEmpty) {
+        workOrders = List.from(allWorkOrders);
+      } else {
+        workOrders = allWorkOrders.where((workOrder) => workOrder.dynamicFields['id'].toString().contains(searchQuery)).toList();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -316,11 +325,13 @@ class _OpenServiceState extends State<OpenService> {
                         children: <TextSpan>[
                           TextSpan(text: 'Локация: $location\nАдрес: $executor\n'),
                           TextSpan(text: 'Статус: $statusMessage\n', style: TextStyle(color: statusColor)),
-                          TextSpan(text: 'Дата  приезда: $trimmedDateString'),
+                          TextSpan(text: 'Дата  приезда: $trimmedDateString\n'),
+                          // TextSpan(text: 'Лицевой счет: $_decider', style: const TextStyle(color: Colors.green)),
                         ],
                       ),
                     ),
                     onTap: () {
+                      print("object");
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -337,6 +348,15 @@ class _OpenServiceState extends State<OpenService> {
       ),
     );
   }
+
+  String _decider(String? ls) {
+    if (ls != null) {
+      return ls;
+    } else {
+      return "Неизвестный";
+    }
+  }
+
 }
 
 class WorkOrder {

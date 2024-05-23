@@ -22,7 +22,7 @@ class ResultScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Expanded(
-                child: SelectableText(macAddress, style: Theme.of(context).textTheme.bodyText1,),
+                child: SelectableText(macAddress, style: Theme.of(context).textTheme.bodyMedium,),
               ),
 
             ],

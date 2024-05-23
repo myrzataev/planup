@@ -528,7 +528,7 @@ class _HydraConnectState extends State<HydraConnect> {
           child: ListTile(
             title: SelectableText(
               macAddress.toLowerCase(), // Преобразование MAC-адреса в нижний регистр
-              style: Theme.of(context).textTheme.bodyText1,
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
             trailing: IconButton(
               icon: Icon(Icons.copy),

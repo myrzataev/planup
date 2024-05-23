@@ -7,7 +7,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:async';
 import 'package:planup/views/home/work_order_details_screen.dart';
 
-
 class OutfitScreen extends StatefulWidget {
   const OutfitScreen({Key? key}) : super(key: key);
 
@@ -19,8 +18,9 @@ class _OutfitScreenState extends State<OutfitScreen> {
   List<WorkOrder> workOrders = [];
   DateTime? selectedDate;
   bool _isInit = true;
-
-
+  // late String _lsNumber;
+  List<dynamic> listOfLsNumbers = [];
+  List<dynamic> listOfLsNumbersCopy = [];
 
   @override
   void initState() {
@@ -28,9 +28,19 @@ class _OutfitScreenState extends State<OutfitScreen> {
     _loadWorkOrders();
     //  _reloadTimer = Timer.periodic(Duration(seconds: 120), (Timer t) => _loadWorkOrders());
     selectedStatus = 'Не начат';
+    setState(() {
+      listOfLsNumbersCopy = listOfLsNumbers;
+    });
   }
+   void filterByLsNumber(String searchText){
+    List<dynamic> results = [];
+    if(searchText.isEmpty){
+      results = listOfLsNumbers;
 
-
+    }else{
+      // results = listOfLsNumbers.where((element) => element.toString().toLowerCase().c)
+    }
+   }
   @override
   void dispose() {
     //   _reloadTimer?.cancel();
@@ -38,9 +48,10 @@ class _OutfitScreenState extends State<OutfitScreen> {
 
     super.dispose();
   }
-  List<WorkOrder> allWorkOrders = []; // Добавьте переменную для хранения всех заказов
-  String? selectedStatus;
 
+  List<WorkOrder> allWorkOrders =
+      []; // Добавьте переменную для хранения всех заказов
+  String? selectedStatus;
 
   @override
   void didChangeDependencies() {
@@ -51,9 +62,9 @@ class _OutfitScreenState extends State<OutfitScreen> {
       _isInit = false;
     }
   }
+
   final storage = FlutterSecureStorage();
   // Timer? _reloadTimer;
-
 
   Future<void> _loadWorkOrders() async {
     final username = await storage.read(key: 'user_id');
@@ -65,7 +76,7 @@ class _OutfitScreenState extends State<OutfitScreen> {
       final response = await http.post(uri, headers: headers, body: body);
       print(response.statusCode);
       if (response.statusCode == 200) {
-       final data = json.decode(response.body);
+        final data = json.decode(response.body);
         // if (data != null && data['works'] != null) {
         //   for (var work in data['works']) {
         //   var date = work['work_fields']?['Желаемая дата  приезда']?['Желаемая дата  приезда']?['UF_CRM_1673255749'];
@@ -78,11 +89,37 @@ class _OutfitScreenState extends State<OutfitScreen> {
         //     }
         //   }
         // }
-        final List<dynamic> works = data['works']; // Получение списка заказов из ответа сервера
-
+        final List<dynamic> works =
+            data['works']; // Получение списка заказов из ответа сервера
+        // print(works.map((element) => element["work_fields"]["Лицевой счет"]["Лицевой счет"]["UF_CRM_1673255771"]).toList());
         setState(() {
           workOrders = works.map((work) => WorkOrder.fromJson(work)).toList();
-          allWorkOrders = List.from(workOrders); // Создание копии всех заказов
+          allWorkOrders = List.from(workOrders);
+          try {
+            listOfLsNumbers = works.map((element) {
+              var workFields = element["work_fields"];
+              var lsNumber =
+                  workFields != null ? workFields["Лицевой счет"] : 0;
+              var innerLsNumber = (lsNumber != null && lsNumber != 0)
+                  ? lsNumber["Лицевой счет"]
+                  : 0;
+              var finalValue = (innerLsNumber != null && innerLsNumber != 0)
+                  ? innerLsNumber["UF_CRM_1673255771"]
+                  : 0;
+
+              if (finalValue != null && finalValue != 0) {
+                print(finalValue);
+                listOfLsNumbersCopy.add(finalValue);
+                return finalValue;
+              } else {
+                // Handle the case where the value is null, if needed
+                return "Не указан"; // or return null
+              }
+            }).toList();
+          } catch (e) {
+            print(e);
+          }
+          // Создание копии всех заказов
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -102,7 +139,11 @@ class _OutfitScreenState extends State<OutfitScreen> {
     }
   }
 
-
+  // void filterByLsNumber({required String searchQuery}) {
+  //   setState(() {
+  //     _lsNumber = searchQuery;
+  //   });
+  // }
 
   void filterWorkOrdersByDate(DateTime date) {
     setState(() {
@@ -128,14 +169,13 @@ class _OutfitScreenState extends State<OutfitScreen> {
     });
   }
 
-
   void filterAllWorkOrders() {
     setState(() {
       selectedDate = null;
-      workOrders = List.from(allWorkOrders); // Возвращение к полному списку всех заказов
+      workOrders =
+          List.from(allWorkOrders); // Возвращение к полному списку всех заказов
     });
   }
-
 
   List<String> statusList = [
     'Все',
@@ -145,7 +185,6 @@ class _OutfitScreenState extends State<OutfitScreen> {
     'Завершен',
     'Приостановлен',
   ];
-
 
   void filterWorkOrdersByStatus(String? status) {
     setState(() {
@@ -185,8 +224,6 @@ class _OutfitScreenState extends State<OutfitScreen> {
     }
   }
 
-
-
   Map<String, dynamic> getStatusMessage(String statusId) {
     IconData statusIcon;
     switch (statusId) {
@@ -195,21 +232,38 @@ class _OutfitScreenState extends State<OutfitScreen> {
         return {'message': 'Не начат', 'color': Colors.red, 'icon': statusIcon};
       case '2':
         statusIcon = Icons.directions_bus; // Icon for "В пути"
-        return {'message': 'В пути', 'color': Colors.yellow, 'icon': statusIcon};
+        return {
+          'message': 'В пути',
+          'color': Colors.yellow,
+          'icon': statusIcon
+        };
       case '3':
         statusIcon = Icons.play_arrow; // Icon for "Начат"
         return {'message': 'Начат', 'color': Colors.blue, 'icon': statusIcon};
       case '4':
         statusIcon = Icons.check_circle; // Icon for "Завершен"
-        return {'message': 'Завершен', 'color': Colors.green, 'icon': statusIcon};
+        return {
+          'message': 'Завершен',
+          'color': Colors.green,
+          'icon': statusIcon
+        };
       case '5':
         statusIcon = Icons.pause_circle; // Icon for "Завершен"
-        return {'message': 'Приостановлен', 'color': Colors.yellow, 'icon': statusIcon};
+        return {
+          'message': 'Приостановлен',
+          'color': Colors.yellow,
+          'icon': statusIcon
+        };
       default:
         statusIcon = Icons.help_outline; // Icon for "Неизвестный статус"
-        return {'message': 'Неизвестный статус', 'color': Colors.grey, 'icon': statusIcon};
+        return {
+          'message': 'Неизвестный статус',
+          'color': Colors.grey,
+          'icon': statusIcon
+        };
     }
   }
+
   Map<String, dynamic> getResolutionMessage(String resolutionId) {
     IconData resolutionIcon = Icons.help_outline; // Дефолтная иконка
     String message = 'Неизвестная резолюция';
@@ -295,7 +349,6 @@ class _OutfitScreenState extends State<OutfitScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
         appBar: AppBar(
           title: Text('Мои наряды'),
@@ -319,7 +372,6 @@ class _OutfitScreenState extends State<OutfitScreen> {
         ),
         body: Column(
           children: [
-            
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -338,7 +390,9 @@ class _OutfitScreenState extends State<OutfitScreen> {
                         filterWorkOrdersByDate(pickedDate);
                       }
                     },
-                    child: Text(selectedDate == null ? "Выбрать дату" : "Дата: ${DateFormat('dd.MM').format(selectedDate!)}"),
+                    child: Text(selectedDate == null
+                        ? "Выбрать дату"
+                        : "Дата: ${DateFormat('dd.MM').format(selectedDate!)}"),
                   ),
                   DropdownButton<String>(
                     value: selectedStatus,
@@ -348,7 +402,8 @@ class _OutfitScreenState extends State<OutfitScreen> {
                         filterWorkOrdersByStatus(newValue);
                       });
                     },
-                    items: statusList.map<DropdownMenuItem<String>>((String value) {
+                    items: statusList
+                        .map<DropdownMenuItem<String>>((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
                         child: Text(value),
@@ -357,106 +412,159 @@ class _OutfitScreenState extends State<OutfitScreen> {
                   ),
                   ElevatedButton(
                     onPressed: () {
+                      // print(listOfLsNumbers.length);
+                       
                       filterTodayWorkOrders();
                     },
                     child: Text('Сегодня'),
                   ),
-              
                 ],
               ),
             ),
-
             Expanded(
               child: RefreshIndicator(
                 onRefresh: _loadWorkOrders,
                 child: workOrders.isEmpty
                     ? Center(
-                  child: selectedDate == null
-                      ? Text('Выберите дату для фильтрации нарядов')
-                      : Text('Нет нарядов для выбранной даты'),
-                )
-                    :ListView.builder(
-                  itemCount: workOrders.length,
-                  itemBuilder: (context, index) {
-                    final workOrder = workOrders[index];
-                    String extractLocation(Map<String, dynamic> dynamicFields) {
-                      const locationKeys = {
-                        'Локация Чуй': 'UF_CRM_1675072231',
-                        'Локация Иссык-Куль': 'UF_CRM_1675071171',
-                        'Локация Нарын': 'UF_CRM_1675071012',
-                        'Локация Ош': 'UF_CRM_1675070693',
-                        'Локация Талас': 'UF_CRM_1675070436',
-                        'Локация Джалал-Абад': 'UF_CRM_1675071353',
-                        'Наименование локации': 'UF_CRM_1678102336',
-                      };
+                        child: selectedDate == null
+                            ? Text('Выберите дату для фильтрации нарядов')
+                            : Text('Нет нарядов для выбранной даты'),
+                      )
+                    : ListView.builder(
+                        itemCount: workOrders.length,
+                        itemBuilder: (context, index) {
+                          final workOrder = workOrders[index];
+                          String extractLocation(
+                              Map<String, dynamic> dynamicFields) {
+                            const locationKeys = {
+                              'Локация Чуй': 'UF_CRM_1675072231',
+                              'Локация Иссык-Куль': 'UF_CRM_1675071171',
+                              'Локация Нарын': 'UF_CRM_1675071012',
+                              'Локация Ош': 'UF_CRM_1675070693',
+                              'Локация Талас': 'UF_CRM_1675070436',
+                              'Локация Джалал-Абад': 'UF_CRM_1675071353',
+                              'Наименование локации': 'UF_CRM_1678102336',
+                            };
 
-                      for (var entry in locationKeys.entries) {
-                        final locationLabel = entry.key;
-                        final locationId = entry.value;
-                        final locationValue = dynamicFields['work_fields'][locationLabel]?[locationLabel]?[locationId];
-                        if (locationValue != null && locationValue.isNotEmpty) {
-                          return locationValue;
-                        }
-                      }
-                      return 'Не указано';
-                    }
+                            for (var entry in locationKeys.entries) {
+                              final locationLabel = entry.key;
+                              final locationId = entry.value;
+                              final locationValue = dynamicFields['work_fields']
+                                  [locationLabel]?[locationLabel]?[locationId];
+                              if (locationValue != null &&
+                                  locationValue.isNotEmpty) {
+                                return locationValue;
+                              }
+                            }
+                            return 'Не указано';
+                          }
 
-                    String location = extractLocation(workOrder.dynamicFields);
-                    String executor = workOrder.dynamicFields['work_fields']['Адрес']['Адрес']['UF_CRM_1674993837284'].split('|').first ?? 'Не указано';
-                    String accountNumber = workOrder.dynamicFields['status_work_id'].toString() ?? '0';
-                    String desiredArrivalDateString =workOrder.dynamicFields['work_fields']['Желаемая дата  приезда']['Желаемая дата  приезда']['UF_CRM_1673255749'];
-                    String trimmedDateString = desiredArrivalDateString.substring(0, desiredArrivalDateString.length - 15);
+                          String location =
+                              extractLocation(workOrder.dynamicFields);
+                          String executor = workOrder
+                                  .dynamicFields['work_fields']['Адрес']
+                                      ['Адрес']['UF_CRM_1674993837284']
+                                  .split('|')
+                                  .first ??
+                              'Не указано';
+                          String accountNumber = workOrder
+                                  .dynamicFields['status_work_id']
+                                  .toString() ??
+                              '0';
+                          String desiredArrivalDateString = workOrder
+                                      .dynamicFields['work_fields']
+                                  ['Желаемая дата  приезда']
+                              ['Желаемая дата  приезда']['UF_CRM_1673255749'];
+                          String trimmedDateString =
+                              desiredArrivalDateString.substring(
+                                  0, desiredArrivalDateString.length - 15);
+                          // String? lsNumber = workOrder
+                          //         .dynamicFields['work_fields']['Лицевой счет']
+                          //     ['Лицевой счет']['UF_CRM_1673255771'];
 
-                    Map<String, dynamic> statusInfo = getStatusMessage(accountNumber);
-                    String statusMessage = statusInfo['message'];
-                    Color statusColor = statusInfo['color'];
+                          Map<String, dynamic> statusInfo =
+                              getStatusMessage(accountNumber);
+                          String statusMessage = statusInfo['message'];
+                          Color statusColor = statusInfo['color'];
 
-                    // Извлеките информацию о резолюции, если наряд завершен
-                    String resolutionId = workOrder.dynamicFields['resolution_work_id']?.toString() ?? 'нет резолюции';
-                    Map<String, dynamic> resolutionInfo = getResolutionMessage(resolutionId);
-                    bool isCompleted = accountNumber == '4'; // Предположим, что '4' это статус "Завершен"
+                          // Извлеките информацию о резолюции, если наряд завершен
+                          String resolutionId = workOrder
+                                  .dynamicFields['resolution_work_id']
+                                  ?.toString() ??
+                              'нет резолюции';
+                          Map<String, dynamic> resolutionInfo =
+                              getResolutionMessage(resolutionId);
+                          bool isCompleted = accountNumber ==
+                              '4'; // Предположим, что '4' это статус "Завершен"
 
-                    return Card(
-                      child: ListTile(
-                        title: Text('Наряд: №${workOrder.dynamicFields['id']}   ${workOrder.dynamicFields['type_deal']}'),
-                        subtitle: RichText(
-                          text: TextSpan(
-                            style: DefaultTextStyle.of(context).style,
-                            children: <TextSpan>[
-                              TextSpan(text: 'Локация: $location\nАдрес: $executor\n'),
-
-                              TextSpan(text: 'Статус: $statusMessage\n', style: TextStyle(color: statusColor)),
-                              TextSpan(text: 'Дата  приезда: $trimmedDateString', ),
-                              if (isCompleted) // Показать резолюцию, если наряд завершен
-                                TextSpan(text: '\nРезолюция: ${resolutionInfo['message']}', style: TextStyle(color: resolutionInfo['color'])),
-                            ],
-                          ),
-                        ),
-                        leading: Icon(
-                          isCompleted ? resolutionInfo['icon'] : statusInfo['icon'], // Иконка для резолюции или статуса
-                          color: isCompleted ? resolutionInfo['color'] : statusColor, // Цвет для резолюции или статуса
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => WorkOrderDetailsScreen(workOrder: workOrder),
+                          return Card(
+                            child: ListTile(
+                              title: Text(
+                                  'Наряд: №${workOrder.dynamicFields['id']}   ${workOrder.dynamicFields['type_deal']}'),
+                              subtitle: RichText(
+                                text: TextSpan(
+                                  style: DefaultTextStyle.of(context).style,
+                                  children: <TextSpan>[
+                                    TextSpan(
+                                        text:
+                                            'Локация: $location\nАдрес: $executor\n'),
+                                    TextSpan(
+                                        text: 'Статус: $statusMessage\n',
+                                        style: TextStyle(color: statusColor)),
+                                    TextSpan(
+                                      text:
+                                          'Дата  приезда: $trimmedDateString\n',
+                                    ),
+                                    TextSpan(
+                                        text: 'Лицевой счет:${_decider(listOfLsNumbers[index])}',
+                                        style: const TextStyle(
+                                            color: Colors.green)),
+                                    if (isCompleted) // Показать резолюцию, если наряд завершен
+                                      TextSpan(
+                                          text:
+                                              '\nРезолюция: ${resolutionInfo['message']}',
+                                          style: TextStyle(
+                                              color: resolutionInfo['color'])),
+                                  ],
+                                ),
+                              ),
+                              leading: Icon(
+                                isCompleted
+                                    ? resolutionInfo['icon']
+                                    : statusInfo[
+                                        'icon'], // Иконка для резолюции или статуса
+                                color: isCompleted
+                                    ? resolutionInfo['color']
+                                    : statusColor, // Цвет для резолюции или статуса
+                              ),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        WorkOrderDetailsScreen(
+                                            workOrder: workOrder),
+                                  ),
+                                );
+                              },
                             ),
                           );
                         },
                       ),
-                    );
-                  },
-                ),
-
               ),
             ),
           ],
         ));
   }
+
+  String _decider(String? ls) {
+    if (ls != null) {
+      return ls;
+    } else {
+      return "Неизвестный";
+    }
+  }
 }
-
-
 
 class WorkOrder {
   final Map<String, dynamic> dynamicFields;
@@ -471,9 +579,10 @@ class WorkOrder {
     Map<String, dynamic> fields = json;
 
     // Извлечение желаемой даты приезда
-    String desiredArrivalDateString = json['work_fields']['Желаемая дата  приезда']['Желаемая дата  приезда']['UF_CRM_1673255749'];
+    String desiredArrivalDateString = json['work_fields']
+            ['Желаемая дата  приезда']['Желаемая дата  приезда']
+        ['UF_CRM_1673255749'];
     DateTime desiredArrivalDate = DateTime.parse(desiredArrivalDateString);
-
 
     return WorkOrder(
       dynamicFields: fields,
@@ -481,3 +590,11 @@ class WorkOrder {
     );
   }
 }
+// class LsNumbers{
+//   final List<String> lsNumbers;
+//   LsNumbers({required this.lsNumbers});
+//   factory LsNumbers.fromJson(Map<String, String> json){
+//      Map<String, dynamic> fields = json["work_fields"]["Лицевой счет"]["Лицевой счет"]["UF_CRM_1673255771"];
+//      String lsNumber = json[]
+//   }
+// }

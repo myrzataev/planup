@@ -237,12 +237,13 @@ class _GetopenserviceState extends State<Getopenservice> {
                   leading: Icon(Icons.phone), // Иконка телефона
                   title: Text(phoneNumber), // Отображаем телефонный номер
                   onTap: () async {
+                    
                     final Uri url = Uri(scheme: 'tel', path: phoneNumber);
-                    if (await canLaunchUrl(url)) {
-                      await launchUrl(url);
-                    } else {
-                      print('Не удалось набрать номер $phoneNumber');
-                    }
+                   try{
+                    await launchUrl(url);
+                   }catch(e){
+                    print(e.toString());
+                   }
                   },
                 );
               }).toList(),
@@ -537,7 +538,12 @@ class _GetopenserviceState extends State<Getopenservice> {
               // Если статус "Наряд не начат" (statusWorkId == '1'), отображаем кнопку "Выехать"
 
                 ElevatedButton(
-                  onPressed: _goWithConfirmation, // Действие "Выехать"
+                  onPressed: (){
+                    _goWithConfirmation();
+                  },
+
+                   // Действие "Выехать"
+
                   child: Text('Взять в работу', style: TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                 ),

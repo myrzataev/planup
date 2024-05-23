@@ -1,4 +1,6 @@
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
@@ -14,8 +16,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'connecthydra.dart';
 import 'myservice.dart';
 
-
-
 class WorkOrderDetailsScreen extends StatefulWidget {
   final WorkOrder workOrder;
 
@@ -26,6 +26,11 @@ class WorkOrderDetailsScreen extends StatefulWidget {
 }
 
 class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
+  // late String? _selectedOption;
+
+  GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  GlobalKey<FormState> _formKeyForButton = GlobalKey<FormState>();
+
   List<dynamic> statuses = []; // Объявление списка статусов
   Map<String, String> selectedStatus = {};
   TextEditingController commentController = TextEditingController();
@@ -36,11 +41,11 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
   Map<String, File> capturedImages = {}; // Updated to use a Map
   final storage = FlutterSecureStorage();
 
-  Map<String, TextEditingController> reportControllers = {}; // Для хранения контроллеров
-  String statusWorkId = ''; // Добавляем переменную состояния для отслеживания статуса работы
+  Map<String, TextEditingController> reportControllers =
+      {}; // Для хранения контроллеров
+  String statusWorkId =
+      ''; // Добавляем переменную состояния для отслеживания статуса работы
   String contact = '';
-
-
 
   Future<void> _captureImage(String sendKey) async {
     try {
@@ -68,8 +73,6 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
     }
   }
 
-
-
   Future<ImageSource?> _showImageSourceDialog() async {
     return showDialog<ImageSource>(
       context: context,
@@ -89,15 +92,14 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
     );
   }
 
-
-  Map<String, List<DropdownMenuItem<String>>> enumerationOptions = {}; // Для хранения вариантов выбора
-  Map<String, String> selectedValues = {}; // Хранит текущие выбранные значения для выпадающих списков
+  Map<String, List<DropdownMenuItem<String>>> enumerationOptions =
+      {}; // Для хранения вариантов выбора
+  Map<String, String> selectedValues =
+      {}; // Хранит текущие выбранные значения для выпадающих списков
 
   @override
   void initState() {
     super.initState();
-
-
 
     fetchStatuses().then((loadedStatuses) {
       setState(() {
@@ -108,8 +110,8 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
       print('Error fetching statuses: $error');
     });
 
-
-    final workFieldsMap = widget.workOrder.dynamicFields['work_fields'] as Map<String, dynamic>;
+    final workFieldsMap =
+        widget.workOrder.dynamicFields['work_fields'] as Map<String, dynamic>;
 
     workFieldsMap.entries.forEach((entry) {
       final innerWorkFieldsMap = entry.value as Map<String, dynamic>;
@@ -126,7 +128,8 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
               List<DropdownMenuItem<String>> items = [
                 DropdownMenuItem<String>(
                   value: 'default', // Статическое значение по умолчанию
-                  child: Text('Выберите опцию'), // Описание статического элемента
+                  child:
+                      Text('Выберите опцию'), // Описание статического элемента
                 ),
                 ...value.map((item) {
                   final id = item['VALUE'].toString();
@@ -143,7 +146,7 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
 
               // Установка начального значения в 'default'
               selectedValues[sendKey] = 'default';
-            }             else {
+            } else {
               // Убедитесь, что value является строкой
               if (value is String) {
                 String correctedString = value.replaceAll("'", "\"");
@@ -160,7 +163,8 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
                         child: Text('Выберите опцию'),
                       ),
                       ...values.map<DropdownMenuItem<String>>((item) {
-                        final id = item['VALUE'].toString(); // Используйте 'ID' для value
+                        final id = item['VALUE']
+                            .toString(); // Используйте 'ID' для value
                         final text = item['VALUE'].toString();
                         return DropdownMenuItem<String>(
                           value: id,
@@ -179,19 +183,19 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
                 } catch (e) {
                   // Обработка ошибки десериализации
                   print("Ошибка при десериализации JSON: $e");
-                  reportControllers[sendKey] = TextEditingController(text: value);
+                  reportControllers[sendKey] =
+                      TextEditingController(text: value);
                 }
               } else {
                 // Если value не является строкой, напрямую используем как текст контроллера
-                reportControllers[sendKey] = TextEditingController(text: value.toString());
+                reportControllers[sendKey] =
+                    TextEditingController(text: value.toString());
               }
-
             }
           });
         }
       });
     });
-
 
     statusWorkId = widget.workOrder.dynamicFields['status_work_id'].toString();
 
@@ -225,35 +229,39 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
 
     statusWorkId = widget.workOrder.dynamicFields['status_work_id'].toString();
 
-
 // ...
 
 // Использование функции в map
-    detailsWidgets = (widget.workOrder.dynamicFields['work_fields'] as Map<String, dynamic>).entries
-        .where((entry) => !entry.key.contains('Отчет') &&
-        !entry.key.contains('Желаемая дата  приезда') &&
-        !entry.key.contains('enumeration') &&
-        !entry.key.contains('TYPE_ID') &&
-        !entry.key.contains('templates_tip_id') &&
-        !entry.key.contains('worker_id') &&
-        !entry.key.contains('bitrix_id') &&
-        !entry.key.contains('created_at') &&
-        !entry.key.contains('type_deal') &&
-        !entry.key.contains('Локация Чуй') &&
-        !entry.key.contains('Локация Иссык-Куль') &&
-        !entry.key.contains('Локация Нарын') &&
-        !entry.key.contains('Локация Ош') &&
-        !entry.key.contains('Локация Талас') &&
-        !entry.key.contains('Локация Джалал-Абад') &&
-        !entry.key.contains('Наименование локации') &&
-        !entry.key.contains('Адрес') &&
-        !entry.key.contains('Контакт') &&
-        !entry.key.contains('.status_work') &&
-        !entry.key.contains('id') &&
-        !entry.key.contains('Тип') &&
-        !entry.key.contains('CONTACT_ID'))
-        .map((entry) {
-      final cleanedKey = entry.key.replaceFirstMapped(RegExp(r'.UF_CRM.*$'), (match) => '').trim();
+    detailsWidgets =
+        (widget.workOrder.dynamicFields['work_fields'] as Map<String, dynamic>)
+            .entries
+            .where((entry) =>
+                !entry.key.contains('Отчет') &&
+                !entry.key.contains('Желаемая дата  приезда') &&
+                !entry.key.contains('enumeration') &&
+                !entry.key.contains('TYPE_ID') &&
+                !entry.key.contains('templates_tip_id') &&
+                !entry.key.contains('worker_id') &&
+                !entry.key.contains('bitrix_id') &&
+                !entry.key.contains('created_at') &&
+                !entry.key.contains('type_deal') &&
+                !entry.key.contains('Локация Чуй') &&
+                !entry.key.contains('Локация Иссык-Куль') &&
+                !entry.key.contains('Локация Нарын') &&
+                !entry.key.contains('Локация Ош') &&
+                !entry.key.contains('Локация Талас') &&
+                !entry.key.contains('Локация Джалал-Абад') &&
+                !entry.key.contains('Наименование локации') &&
+                !entry.key.contains('Адрес') &&
+                !entry.key.contains('Контакт') &&
+                !entry.key.contains('.status_work') &&
+                !entry.key.contains('id') &&
+                !entry.key.contains('Тип') &&
+                !entry.key.contains('CONTACT_ID'))
+            .map((entry) {
+      final cleanedKey = entry.key
+          .replaceFirstMapped(RegExp(r'.UF_CRM.*$'), (match) => '')
+          .trim();
       final displayValue = extractNestedValue(entry.value);
 
       // Проверяем наличие "Ссылка" и "Схема" в данных
@@ -262,19 +270,23 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
       final hasLink = displayValue.toString().contains('telegra');
 
       return ListTile(
-        leading: Icon((hasLink || hasSchema) ? Icons.image : Icons.info_outline),
+        leading:
+            Icon((hasLink || hasSchema) ? Icons.image : Icons.info_outline),
         title: Text(cleanedKey),
-        subtitle: Text((hasLink || hasSchema) ? 'Показать' : displayValue.toString()),
+        subtitle:
+            Text((hasLink || hasSchema) ? 'Показать' : displayValue.toString()),
         onTap: () {
           if (hasLink) {
-            final match = RegExp(r'https?://\S+').firstMatch(displayValue.toString());
+            final match =
+                RegExp(r'https?://\S+').firstMatch(displayValue.toString());
             print(match);
             if (match != null) {
               final url = match.group(0);
               _showImageView(url!);
             }
           } else if (hasSchema) {
-            final match = RegExp(r'https?://\S+').firstMatch(displayValue.toString());
+            final match =
+                RegExp(r'https?://\S+').firstMatch(displayValue.toString());
             if (match != null) {
               final url = match.group(0);
               _showImageDialog(url!);
@@ -284,23 +296,27 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
       );
     }).toList();
 
-    final workDetailsMap = widget.workOrder.dynamicFields['work_fields'] as Map<String, dynamic>;
+    final workDetailsMap =
+        widget.workOrder.dynamicFields['work_fields'] as Map<String, dynamic>;
 
     infoWidgets = workDetailsMap.entries.expand((entry) {
       final innerMap = entry.value as Map<String, dynamic>;
       return innerMap.entries
-          .where((innerEntry) => innerEntry.key.contains('Локация Чуй') ||
-          innerEntry.key.contains('Локация Иссык-Куль') ||
-          innerEntry.key.contains('Локация Нарын') ||
-          innerEntry.key.contains('Локация Ош') ||
-          innerEntry.key.contains('Локация Талас') ||
-          innerEntry.key.contains('Локация Джалал-Абад') ||
-          innerEntry.key.contains('Наименование локации') ||
-          innerEntry.key.contains('Адрес') ||
-          innerEntry.key.contains('Желаемая дата  приезда') ||
-          innerEntry.key.contains('Контакт'))
+          .where((innerEntry) =>
+              innerEntry.key.contains('Локация Чуй') ||
+              innerEntry.key.contains('Локация Иссык-Куль') ||
+              innerEntry.key.contains('Локация Нарын') ||
+              innerEntry.key.contains('Локация Ош') ||
+              innerEntry.key.contains('Локация Талас') ||
+              innerEntry.key.contains('Локация Джалал-Абад') ||
+              innerEntry.key.contains('Наименование локации') ||
+              innerEntry.key.contains('Адрес') ||
+              innerEntry.key.contains('Желаемая дата  приезда') ||
+              innerEntry.key.contains('Контакт'))
           .map((innerEntry) {
-        final cleanedKey = innerEntry.key.replaceFirstMapped(RegExp(r'.UF_CRM.*$'), (match) => '').trim();
+        final cleanedKey = innerEntry.key
+            .replaceFirstMapped(RegExp(r'.UF_CRM.*$'), (match) => '')
+            .trim();
         final displayValue = extractNestedValue(innerEntry.value);
         final value = displayValue.split('|').first;
 
@@ -320,8 +336,7 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
               ],
             ),
           );
-        }
-        else if (innerEntry.key.contains('Контакт')) {
+        } else if (innerEntry.key.contains('Контакт')) {
           final contactData = innerEntry.value['CONTACT_ID'] ?? {};
           String fio = '';
           List<String> phoneNumbers = [];
@@ -330,7 +345,8 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
             for (var entry in contactData.entries) {
               if (entry.value is List) {
                 fio = entry.key; // Предполагаем, что ключ - это ФИО
-                phoneNumbers = List<String>.from(entry.value); // Извлекаем номера телефонов
+                phoneNumbers = List<String>.from(
+                    entry.value); // Извлекаем номера телефонов
                 break; // Прерываем цикл после обработки первой пары ключ-значение
               }
             }
@@ -348,20 +364,13 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
                   leading: Icon(Icons.phone), // Иконка телефона
                   title: Text(phoneNumber), // Отображаем телефонный номер
                   onTap: () async {
-
-                      launch('tel:${phoneNumber}');
-
-
+                    launch('tel:${phoneNumber}');
                   },
                 );
               }).toList(),
             ],
           );
-        }
-
-
-
-        else {
+        } else {
           return ListTile(
             leading: Icon(Icons.location_on), // Иконка местоположения
             title: Text(cleanedKey),
@@ -370,8 +379,6 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
         }
       });
     }).toList();
-
-
   }
 
   @override
@@ -382,8 +389,8 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
     super.dispose();
   }
 
-
-  Future<void> _showConfirmationDialog(String message, VoidCallback onConfirm) async {
+  Future<void> _showConfirmationDialog(
+      String message, VoidCallback onConfirm) async {
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // User must tap a button to close the dialog
@@ -401,7 +408,8 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
             TextButton(
               child: Text('Отменить'),
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog without doing anything
+                Navigator.of(context)
+                    .pop(); // Close the dialog without doing anything
               },
             ),
             TextButton(
@@ -432,17 +440,19 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
       _pause, // This is the original action method
     );
   }
+
   void _startWithConfirmation() {
     _showConfirmationDialog(
       'Вы уверены,что хотите начать?',
       _start, // This is the original action method
     );
   }
+
   // Интеграция метода подтверждения в действия
   void _endWithConfirmation() {
     _showConfirmationDialog(
       'Вы уверены, что хотите завершить наряд?',
-          () => _showCompletionDialog(), // Показать диалог завершения наряда
+      () => _showCompletionDialog(), // Показать диалог завершения наряда
     );
   }
 
@@ -477,7 +487,9 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
                     _showCommentDialog();
                   },
                 ),
-                ...statuses.where((status) => status['id'] != 100).map((status) {
+                ...statuses
+                    .where((status) => status['id'] != 100)
+                    .map((status) {
                   return ListTile(
                     title: Text(status['name']),
                     onTap: () {
@@ -513,7 +525,8 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
               child: Text('Отправить'),
               onPressed: () {
                 if (commentController.text.trim().isNotEmpty) {
-                  Navigator.of(context).pop(); // Закрыть диалог перед отправкой данных
+                  Navigator.of(context)
+                      .pop(); // Закрыть диалог перед отправкой данных
                   sendReportData();
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -560,10 +573,10 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
     // Добавление текстовых полей
     formData.fields
       ..add(MapEntry('user_id', '$username'))
-      ..add(MapEntry('naryd_id', widget.workOrder.dynamicFields['id'].toString()));
+      ..add(MapEntry(
+          'naryd_id', widget.workOrder.dynamicFields['id'].toString()));
 
     // Добавление текстовых полей из reportControllers
-
 
     // Добавление выбранных значений из выпадающих списков
     // selectedValues.forEach((key, value) {
@@ -571,8 +584,6 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
     // });
 
     formData.fields.add(MapEntry('resolution', selectedStatus['resolution']!));
-
-
 
     formData.fields.add(MapEntry('comment', commentController.text));
 
@@ -590,10 +601,10 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
       if (file != null) {
         print(file);
         formData.files.add(MapEntry(
-          '$fileKey',// Основной ключ 'image'
-          MultipartFile.fromFileSync(file.path, filename: file.path.split('/').last,
-
-
+          '$fileKey', // Основной ключ 'image'
+          MultipartFile.fromFileSync(
+            file.path,
+            filename: file.path.split('/').last,
           ),
         ));
       }
@@ -627,9 +638,7 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
           ),
         );
         Navigator.of(context).pop();
-
       } else {
-
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Ошибка отправки отчета,сервер не доступен'),
@@ -637,33 +646,37 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
         );
       }
     } catch (e) {
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Ошибка отправки отчета, попробуйте  еще раз'),
         ),
       );
-    }
-    finally {
+    } finally {
       if (dialogContext != null) {
         Navigator.of(dialogContext!).pop(); // Закрывает только диалог
       }
     }
   }
 
-
   void _showImageView(String imageUrl) {
     Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => ImageViewPage(urlOfWeb: imageUrl,),
+      builder: (context) => ImageViewPage(
+        urlOfWeb: imageUrl,
+      ),
     ));
   }
+
   Future<void> _start() async {
     final currentContext = context; // Capture the current BuildContext
     final username = await storage.read(key: 'user_id');
     try {
-      final uri = Uri.parse('http://planup.skynet.kg:8000/planup/planup_start/');
+      final uri =
+          Uri.parse('http://planup.skynet.kg:8000/planup/planup_start/');
       final headers = {'Content-Type': 'application/x-www-form-urlencoded'};
-      final body = {'user_id': '$username', 'naryd_id': '${widget.workOrder.dynamicFields['id']}'};
+      final body = {
+        'user_id': '$username',
+        'naryd_id': '${widget.workOrder.dynamicFields['id']}'
+      };
       print(body);
       final response = await http.post(uri, headers: headers, body: body);
 
@@ -672,7 +685,7 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
 
         setState(() {
           statusWorkId = "3";
-          getStatusMessage("3");// Обновление статуса
+          getStatusMessage("3"); // Обновление статуса
           // Тут добавьте код для обновления других данных в виджете
         });
         // Показать Snackbar
@@ -682,8 +695,8 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
           ),
         );
 
-        DefaultTabController.of(currentContext)!.animateTo(1); // Selects the second tab (index 1)
-
+        DefaultTabController.of(currentContext)!
+            .animateTo(1); // Selects the second tab (index 1)
       } else {
         print('Ошибка при запросе данных: ${response.statusCode}');
       }
@@ -697,7 +710,10 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
     try {
       final uri = Uri.parse('http://planup.skynet.kg:8000/planup/planup_go/');
       final headers = {'Content-Type': 'application/x-www-form-urlencoded'};
-      final body = {'user_id': '$username', 'naryd_id': '${widget.workOrder.dynamicFields['id']}'};
+      final body = {
+        'user_id': '$username',
+        'naryd_id': '${widget.workOrder.dynamicFields['id']}'
+      };
       final response = await http.post(uri, headers: headers, body: body);
 
       if (response.statusCode == 200) {
@@ -709,7 +725,7 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
         );
         setState(() {
           statusWorkId = "2";
-          getStatusMessage("3");// Обновление статуса
+          getStatusMessage("3"); // Обновление статуса
           // Тут добавьте код для обновления других данных в виджете
         });
       } else {
@@ -721,12 +737,17 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
       // Обработка исключений
     }
   }
+
   Future<void> _pause() async {
     final username = await storage.read(key: 'user_id');
     try {
-      final uri = Uri.parse('http://planup.skynet.kg:8000/planup/planup_stoped/');
+      final uri =
+          Uri.parse('http://planup.skynet.kg:8000/planup/planup_stoped/');
       final headers = {'Content-Type': 'application/x-www-form-urlencoded'};
-      final body = {'user_id': '$username', 'naryd_id': '${widget.workOrder.dynamicFields['id']}'};
+      final body = {
+        'user_id': '$username',
+        'naryd_id': '${widget.workOrder.dynamicFields['id']}'
+      };
 
       final response = await http.post(uri, headers: headers, body: body);
 
@@ -735,7 +756,7 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
 
         setState(() {
           statusWorkId = "5";
-          getStatusMessage("5");// Обновление статуса
+          getStatusMessage("5"); // Обновление статуса
           // Тут добавьте код для обновления других данных в виджете
         });
         ScaffoldMessenger.of(context).showSnackBar(
@@ -816,23 +837,35 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
     }
   }
 
+  // late String? _errorText;
   @override
   Widget build(BuildContext context) {
-
-
-
     var statusInfo = getStatusMessage(statusWorkId);
     var statusColor = getStatusColor(statusWorkId);
-    reportWidgets = (widget.workOrder.dynamicFields['work_fields'] as Map<String, dynamic>).entries
-        .where((entry) => entry.key.contains('Отчет') )
-        .map((entry) {
-      final displayedKey = entry.key.replaceFirstMapped(RegExp(r'.UF_CRM.*$'), (match) => '').trim();
-      final sendKey = entry.key.replaceFirstMapped(RegExp(r'^.*UF'), (match) => 'UF').trim();
+    reportWidgets =
+        (widget.workOrder.dynamicFields['work_fields'] as Map<String, dynamic>)
+            .entries
+            .where((entry) => entry.key.contains('Отчет'))
+            .map((entry) {
+      final displayedKey = entry.key
+          .replaceFirstMapped(RegExp(r'.UF_CRM.*$'), (match) => '')
+          .trim();
+      final sendKey = entry.key
+          .replaceFirstMapped(RegExp(r'^.*UF'), (match) => 'UF')
+          .trim();
 
       final isPhoto = entry.key.contains('фото');
-      final  isNumpad =entry.key.contains('ODF') || !entry.key.contains('работы')|| entry.key.contains('ОВ1')|| entry.key.contains('UTP')|| entry.key.contains('Лицевой счет')|| entry.key.contains('Коннектор')|| entry.key.contains('Кронштейн') || entry.key.contains('муфте')|| entry.key.contains('RCA')|| entry.key.contains('оплаченная');
+      final isNumpad = entry.key.contains('ODF') ||
+          !entry.key.contains('работы') ||
+          entry.key.contains('ОВ1') ||
+          entry.key.contains('UTP') ||
+          entry.key.contains('Лицевой счет') ||
+          entry.key.contains('Коннектор') ||
+          entry.key.contains('Кронштейн') ||
+          entry.key.contains('муфте') ||
+          entry.key.contains('RCA') ||
+          entry.key.contains('оплаченная');
       final isShowUrls = entry.value is String && entry.value.contains('https');
-
 
       if (isPhoto) {
         // Обработка полей с фотографиями
@@ -840,22 +873,23 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
           leading: Icon(Icons.camera_alt),
           title: Text(displayedKey),
           subtitle: widget.workOrder.dynamicFields[sendKey] != null
-              ? Image.file(File(widget.workOrder.dynamicFields[sendKey])) // Show the captured image if available
+              ? Image.file(File(widget.workOrder.dynamicFields[
+                  sendKey])) // Show the captured image if available
               : Text('Сделать фото'),
           onTap: () {
             _captureImage(sendKey); // Capture an image when tapped
           },
           trailing: widget.workOrder.dynamicFields[sendKey] != null
               ? IconButton(
-            icon: Icon(Icons.camera_alt),
-            onPressed: () {
-              _captureImage(sendKey); // Capture an image when the button is pressed
-            },
-          )
+                  icon: Icon(Icons.camera_alt),
+                  onPressed: () {
+                    _captureImage(
+                        sendKey); // Capture an image when the button is pressed
+                  },
+                )
               : null,
         );
-      }
-      else if (isShowUrls) {
+      } else if (isShowUrls) {
         return ListTile(
           leading: Icon(Icons.image),
           title: Text(displayedKey),
@@ -866,47 +900,76 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
             }
           },
         );
-      }
-
-
-      else if (enumerationOptions.containsKey(sendKey)) {
+      } else if (enumerationOptions.containsKey(sendKey)) {
         // Создаем DropdownButtonFormField
+        return Column(
+          children: [
+            ListTile(
+              title: DropdownButtonFormField<String>(
+                validator: (value) {
+                  if (value == null || value.isEmpty || value == "default") {
+                    return "Пожалуйста заполните все поля";
+                  }
+                  return null;
+                },
+                value: selectedValues[sendKey],
+                style: TextStyle(overflow: TextOverflow.ellipsis, color: Colors.black),
+                onChanged: (newValue) {
+                  print(newValue);
+                  setState(() {
+                    selectedValues[sendKey] = newValue ?? '';
+                    // _errorText = null;
+                  });
+                },
+                items: enumerationOptions[sendKey],
+                // hint: Text("choose"),
+                decoration: InputDecoration(
+                  labelText: sendKey,
+                  
+                ),
+              ),
+            ),
+            // _errorText != null
+            //     ? Text(
+            //         _errorText ?? "",
+            //         style: const TextStyle(color: Colors.red),
+            //       )
+            //     : const SizedBox()
+          ],
+        );
+      } else if (isNumpad) {
+        // Создаем TextFormField
         return ListTile(
-          title: DropdownButtonFormField<String>(
-            value: selectedValues[sendKey],
-            onChanged: (newValue) {
-              setState(() {
-                selectedValues[sendKey] = newValue ?? '';
-              });
+          title: TextFormField(
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return "Пожалуйста заполните все поля";
+              }
+              return null;
             },
-            items: enumerationOptions[sendKey],
+
+            controller: reportControllers[sendKey],
             decoration: InputDecoration(labelText: sendKey),
+            keyboardType:
+                TextInputType.number, // Устанавливаем числовую клавиатуру
           ),
         );
-      }else if  (isNumpad) {
+      } else {
         // Создаем TextFormField
         return ListTile(
           title: TextFormField(
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return "Пожалуйста заполните все поля";
+              }
+              return null;
+            },
             controller: reportControllers[sendKey],
             decoration: InputDecoration(labelText: sendKey),
-            keyboardType: TextInputType.number, // Устанавливаем числовую клавиатуру
-
           ),
         );
       }
-      else {
-        // Создаем TextFormField
-        return ListTile(
-          title: TextFormField(
-            controller: reportControllers[sendKey],
-            decoration: InputDecoration(labelText: sendKey),
-
-
-          ),
-        );
-      }
-    })
-        .toList();
+    }).toList();
     // String extractNestedValue(dynamic value) {
     //   // Если значение уже является строкой, просто возвращаем ее
     //   if (value is String) return value;
@@ -964,8 +1027,6 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
     //   );
     // }).toList();
 
-
-
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -985,58 +1046,65 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        '$statusInfo  №${widget.workOrder.dynamicFields['id']} ' ,
+                        '$statusInfo  №${widget.workOrder.dynamicFields['id']} ',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 15, // Уменьшенный размер текста для статуса
                         ),
                       ),
-
-
-
                     ),
-
                   ],
                 ),
               ),
-
               if (widget.workOrder.dynamicFields['type_deal'] == 'Подключение')
-
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white, backgroundColor: Colors.blue, // Цвет текста на кнопке
-                    padding: EdgeInsets.symmetric(vertical: 5, horizontal: 5), // Отступы внутри кнопки
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), // Форма кнопки
-                    textStyle: TextStyle(fontSize: 16), // Стиль текста на кнопке
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.blue, // Цвет текста на кнопке
+                    padding: EdgeInsets.symmetric(
+                        vertical: 5, horizontal: 5), // Отступы внутри кнопки
+                    shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(10)), // Форма кнопки
+                    textStyle:
+                        TextStyle(fontSize: 16), // Стиль текста на кнопке
                   ),
                   onPressed: () {
-
-
-                    String extractNestedData(Map<dynamic, dynamic> data, String outerKey, String innerKey) {
+                    String extractNestedData(Map<dynamic, dynamic> data,
+                        String outerKey, String innerKey) {
                       if (data.containsKey(outerKey)) {
                         var outerData = data[outerKey];
-                        if (outerData is Map && outerData.containsKey(outerKey)) {
+                        if (outerData is Map &&
+                            outerData.containsKey(outerKey)) {
                           var innerData = outerData[outerKey];
-                          if (innerData is Map && innerData.containsKey(innerKey)) {
+                          if (innerData is Map &&
+                              innerData.containsKey(innerKey)) {
                             return innerData[innerKey].toString();
                           }
                         }
                       }
                       return 'Данные не найдены';
                     }
-                    String accountNumber = extractNestedData(widget.workOrder.dynamicFields['work_fields'], 'Лицевой счет', 'UF_CRM_1673255771');
+
+                    String accountNumber = extractNestedData(
+                        widget.workOrder.dynamicFields['work_fields'],
+                        'Лицевой счет',
+                        'UF_CRM_1673255771');
                     if (accountNumber != 'Данные не найдены') {
                       print(accountNumber);
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => HydraConnect(accountNumber: accountNumber),
+                          builder: (_) =>
+                              HydraConnect(accountNumber: accountNumber),
                         ),
                       );
                     } else {
                       // Если 'Лицевой счет' не найден или данные не соответствуют ожидаемому формату
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Лицевой счет не найден или данные не соответствуют ожидаемому формату')),
+                        SnackBar(
+                            content: Text(
+                                'Лицевой счет не найден или данные не соответствуют ожидаемому формату')),
                       );
                     }
                   },
@@ -1085,61 +1153,49 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
             SingleChildScrollView(
                 child: // Inside the "Report" tab, where you build the reportWidgets
 // Inside the "Report" tab, where you build the reportWidgets
-                // Inside the "Report" tab, where you build the reportWidgets
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (statusWorkId == '3')...[
-
-                      ...reportWidgets, // Include your report widgets
-                      SizedBox(height: 20), // Add some spacing between report widgets and images
-                      // ElevatedButton(
-                      //   onPressed: sendReportData,
-                      //   child: Text('Отправить данные отчета'),
-                      // ),
-                      SizedBox(height: 20), // Add some spacing between button and images
-
-
-
-
-
-                    ]else if (statusWorkId == '4') ...[
-                      ...reportWidgetsdone, // Включите ваши виджеты отчетов для завершенных нарядов
-                      SizedBox(height: 20), // Добавьте немного пространства после виджетов отчетов
-                      // Здесь могут быть другие виджеты для статуса "Наряд завершен"
-                    ]
-                    else ...[
-                        // Если статус не '3', показать сообщение
-                        Padding(
-                          padding: EdgeInsets.all(10),
-                          child: Text(
-                            'Для работы с отчетами необходимо перевести наряд в статус "Наряд начат".',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.black54,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
+                    // Inside the "Report" tab, where you build the reportWidgets
+                    Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (statusWorkId == '3') ...[
+                    ...reportWidgets, // Include your report widgets
+                    SizedBox(
+                        height:
+                            20), // Add some spacing between report widgets and images
+                    // ElevatedButton(
+                    //   onPressed: sendReportData,
+                    //   child: Text('Отправить данные отчета'),
+                    // ),
+                    SizedBox(
+                        height:
+                            20), // Add some spacing between button and images
+                  ] else if (statusWorkId == '4') ...[
+                    ...reportWidgetsdone, // Включите ваши виджеты отчетов для завершенных нарядов
+                    SizedBox(
+                        height:
+                            20), // Добавьте немного пространства после виджетов отчетов
+                    // Здесь могут быть другие виджеты для статуса "Наряд завершен"
+                  ] else ...[
+                    // Если статус не '3', показать сообщение
+                    Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Text(
+                        'Для работы с отчетами необходимо перевести наряд в статус "Наряд начат".',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.black54,
                         ),
-                      ],
-
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   ],
-                )
-
-
-
-            ),
+                ],
+              ),
+            )),
           ],
-
-
-
-
-
-
         ),
-
-
-
         bottomNavigationBar: BottomAppBar(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1149,44 +1205,58 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
                 ElevatedButton(
                   onPressed: _goWithConfirmation,
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                  child: const Text('Выехать', style: TextStyle(color: Colors.white)),
+                  child: const Text('Выехать',
+                      style: TextStyle(color: Colors.white)),
                 ),
               // Если статус "В пути" (statusWorkId == '2'), отображаем кнопку "Начать"
               if (statusWorkId == '2')
                 ElevatedButton(
                   onPressed: _startWithConfirmation,
                   child: Text('Начать', style: TextStyle(color: Colors.white)),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  style:
+                      ElevatedButton.styleFrom(backgroundColor: Colors.green),
                 ),
               // Если статус "Наряд начат" (statusWorkId == '3'), отображаем кнопки "Приостановить" и "Завершить"
               if (statusWorkId == '3') ...[
                 ElevatedButton(
                   onPressed: _pauseWithConfirmation,
-                  child: Text('Приостановить', style: TextStyle(color: Colors.white)),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                  child: Text('Приостановить',
+                      style: TextStyle(color: Colors.white)),
+                  style:
+                      ElevatedButton.styleFrom(backgroundColor: Colors.orange),
                 ),
                 ElevatedButton(
-                  onPressed: _endWithConfirmation,
-                  child: Text('Завершить', style: TextStyle(color: Colors.white)),
+                  onPressed: () {
+                    // print(_formKey.currentState);
+                    // if (_formKey.currentState!.validate()
+                            // _formKeyForButton.currentState!.validate()
+                        // _selectedOption != null
+                        // ) {
+                      _endWithConfirmation();
+                    // } else {
+                    //   // _errorText = 'Please select an option';
+                    //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    //       content: Text("Пожалуйста заполните все поля")));
+                    // }
+                  },
+                  child:
+                      Text('Завершить', style: TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 ),
                 // Проверяем, нужно ли добавить вкладку "Подключить абонента"
-
               ],
               // Если статус "Приостановлен" (statusWorkId == '5'), отображаем кнопку "Начать"
               if (statusWorkId == '5')
                 ElevatedButton(
                   onPressed: _startWithConfirmation,
                   child: Text('Начать', style: TextStyle(color: Colors.white)),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  style:
+                      ElevatedButton.styleFrom(backgroundColor: Colors.green),
                 ),
             ],
           ),
         ),
-
-
       ),
     );
   }
-
 }
