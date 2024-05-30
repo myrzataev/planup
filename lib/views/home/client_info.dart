@@ -27,6 +27,7 @@ class _Client_infoState extends State<Client_info> {
     setState(() {
       _loading = true; // Устанавливаем состояние загрузки в true
     });
+    ///// Myrzataev
     final url = Uri.parse('http://185.39.79.84:8000/accounts/user_info/');
     final response = await http.post(
       url,

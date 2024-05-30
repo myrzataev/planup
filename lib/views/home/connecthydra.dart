@@ -145,7 +145,7 @@ class _HydraConnectState extends State<HydraConnect> {
     );
 
 
-
+/////Myrzataev
     final Uri uri = Uri.parse('http://185.39.79.84:8000/accounts/auto-connetction/');
     Map<String, dynamic> requestBody = {
 
@@ -212,7 +212,7 @@ class _HydraConnectState extends State<HydraConnect> {
   Future<void> sendMacDataWithAddress(String macAddress, String selectedTariff, String accaunt, String tv, String accaunt_ur, String tel_ur) async {
 
 
-
+////Myrzataev
     final Uri uri = Uri.parse('http://185.39.79.84:8000/accounts/manual-input/');
     Map<String, dynamic> requestBody = {
 

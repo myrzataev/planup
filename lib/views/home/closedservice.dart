@@ -91,6 +91,20 @@ class _OutfitScreenOldState extends State<OutfitScreenOld> {
     }
   }
 
+ void filterWorkOrdersByLs(String? searchQuery) {
+    setState(() {
+      if (searchQuery == null || searchQuery.isEmpty) {
+        workOrders = List.from(allWorkOrders);
+      } else {
+        workOrders = allWorkOrders
+            .where((workOrder) => workOrder.dynamicFields['work_fields']
+                    ["Лицевой счет"]["Лицевой счет"]["UF_CRM_1673255771"]
+                .toString()
+                .contains(searchQuery))
+            .toList();
+      }
+    });
+  }
 
   void filterWorkOrdersByDate(DateTime date) {
     setState(() {
@@ -123,6 +137,7 @@ class _OutfitScreenOldState extends State<OutfitScreenOld> {
       workOrders = List.from(allWorkOrders); // Возвращение к полному списку всех заказов
     });
   }
+
   void filterWorkOrdersByStatus(String status) {
     setState(() {
       selectedStatus = status;
@@ -301,6 +316,33 @@ class _OutfitScreenOldState extends State<OutfitScreenOld> {
                 ),
               ],
             ),
+              Padding(
+                  padding: EdgeInsets.symmetric(
+                      horizontal: MediaQuery.of(context).size.width * 0.06,
+                      vertical: 3),
+                  child: SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.85,
+                    child: TextField(
+                      keyboardType: TextInputType.number,
+                      onChanged: (value) {
+                        setState(() {
+                          filterWorkOrdersByLs(value);
+
+                          // if (value.isEmpty) {
+                          //   // isSearching = false;
+                          // } else {
+                          //   // isSearching = true;
+                          // }
+                        });
+                      },
+                      decoration: InputDecoration(
+                          hintText: "Поиск по лицевому счету",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          )),
+                    ),
+                  ),
+                ),
             Expanded(
               child: RefreshIndicator(
                 onRefresh: _loadWorkOrders,
@@ -338,6 +380,7 @@ class _OutfitScreenOldState extends State<OutfitScreenOld> {
 
                     String location = extractLocation(workOrder.dynamicFields);
                     String executor = workOrder.dynamicFields['work_fields']['Адрес']['Адрес']['UF_CRM_1674993837284'].split('|').first ?? 'Не указано';
+                    String lsNumber = workOrder.dynamicFields['work_fields']["Лицевой счет"]["Лицевой счет"]["UF_CRM_1673255771"]?? "Не указано";
                     String accountNumber = workOrder.dynamicFields['status_work_id'].toString() ?? '0';
                     Map<String, dynamic> statusInfo = getStatusMessage(accountNumber);
                     String statusMessage = statusInfo['message'];
@@ -356,9 +399,11 @@ class _OutfitScreenOldState extends State<OutfitScreenOld> {
                             style: DefaultTextStyle.of(context).style,
                             children: <TextSpan>[
                               TextSpan(text: 'Локация: $location\nАдрес: $executor\n'),
+                               TextSpan(text: 'Лицевой счет: $lsNumber\n'),
                               TextSpan(text: 'Статус: $statusMessage', style: TextStyle(color: statusColor)),
                               if (isCompleted) // Показать резолюцию, если наряд завершен
-                                TextSpan(text: '\nРезолюция: ${resolutionInfo['message']}', style: TextStyle(color: resolutionInfo['color'])),
+                                TextSpan(text: '\nРезолюция: ${resolutionInfo['message']}\n', style: TextStyle(color: resolutionInfo['color'])),
+                               
                             ],
                           ),
                         ),

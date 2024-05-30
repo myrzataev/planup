@@ -568,11 +568,7 @@ class _OutfitScreenState extends State<OutfitScreen> {
                           String location =
                               extractLocation(workOrder.dynamicFields);
                           String executor = workOrder
-                                  .dynamicFields['work_fields']['Адрес']
-                                      ['Адрес']['UF_CRM_1674993837284']
-                                  .split('|')
-                                  .first ??
-                              'Не указано';
+                                  .dynamicFields['work_fields']['Адрес']['Адрес']['UF_CRM_1674993837284'].split('|').first ??'Не указано';
                           String accountNumber = workOrder
                                   .dynamicFields['status_work_id']
                                   .toString() ??
