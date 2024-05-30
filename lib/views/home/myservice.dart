@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
@@ -19,31 +21,68 @@ class _OutfitScreenState extends State<OutfitScreen> {
   DateTime? selectedDate;
   bool _isInit = true;
   // late String _lsNumber;
-  List<dynamic> listOfLsNumbers = [];
-  List<dynamic> listOfLsNumbersCopy = [];
-
+  String? _selectedLocation;
+  List<dynamic> lsList = [];
+  List<dynamic> lsListCopy = [];
+  bool isSearching = false;
+  List<dynamic> listOfLocations = [];
+  List<dynamic> listOfUniqueLocations = [];
   @override
   void initState() {
     super.initState();
     _loadWorkOrders();
     //  _reloadTimer = Timer.periodic(Duration(seconds: 120), (Timer t) => _loadWorkOrders());
     selectedStatus = 'Не начат';
-    setState(() {
-      listOfLsNumbersCopy = listOfLsNumbers;
-    });
+    lsListCopy = lsList;
   }
-   void filterByLsNumber(String searchText){
-    List<dynamic> results = [];
-    if(searchText.isEmpty){
-      results = listOfLsNumbers;
 
-    }else{
-      // results = listOfLsNumbers.where((element) => element.toString().toLowerCase().c)
+  // void filterByLsNumber(String searchText) {
+  //   List<dynamic> results = [];
+  //   if (searchText.isEmpty) {
+  //     // print("hello");
+  //     results =
+  //         listOfLsNumbers.map((toElement) => toElement.toString()).toList();
+  //   } else {
+  //     // print("world");
+  //     results = listOfLsNumbers
+  //         .where((element) => element.contains(searchText.toLowerCase()))
+  //         .toList();
+  //   }
+  //   setState(() {
+  //     print("this is the result $results");
+  //     listOfLsNumbersCopy = List.from(results);
+  //   });
+  // }
+
+  void searchByLs(String query) {
+    var suggestions = [];
+    if (query == null || query.isEmpty) {
+      suggestions = lsList.map((toElement) => toElement.toString()).toList();
+    } else {
+      suggestions = lsList.where((lsNumber) {
+        return lsNumber.toString().toLowerCase().contains(query.toLowerCase());
+      }).toList();
     }
-   }
+    setState(() => lsListCopy = suggestions);
+  }
+
+  // void filterWorkOrdersBySearchQuery(String? searchQuery) {
+  //   setState(() {
+  //     if (searchQuery == null || searchQuery.isEmpty) {
+  //       lsList = List.from(lsList);
+  //     } else {
+  //       lsList = lsList
+  //           .where((workOrder) =>
+  //               workOrder.toString().contains(searchQuery.toLowerCase()))
+  //           .toList();
+  //     }
+  //   });
+  // }
+
   @override
   void dispose() {
     //   _reloadTimer?.cancel();
+
     _loadWorkOrders();
 
     super.dispose();
@@ -56,6 +95,7 @@ class _OutfitScreenState extends State<OutfitScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+
     if (_isInit) {
       _loadWorkOrders();
 
@@ -89,36 +129,28 @@ class _OutfitScreenState extends State<OutfitScreen> {
         //     }
         //   }
         // }
-        final List<dynamic> works =
-            data['works']; // Получение списка заказов из ответа сервера
+        final List<dynamic> works = data['works'];
+        lsList = works.map(
+          (e) {
+            return e["work_fields"]?["Лицевой счет"]?["Лицевой счет"]
+                    ?["UF_CRM_1673255771"] ??
+                "Не указано";
+          },
+        ).toList();
+        listOfLocations = works
+            .map((toElement) =>
+                toElement["work_fields"]?["Наименование локации"]
+                    ?["Наименование локации"]?["UF_CRM_1678102336"] ??
+                'Не указано')
+            .toList();
+        Set<dynamic> uniqueLocationsSet = listOfLocations.toSet();
+        listOfUniqueLocations = uniqueLocationsSet.toList();
+        // Получение списка заказов из ответа сервера
         // print(works.map((element) => element["work_fields"]["Лицевой счет"]["Лицевой счет"]["UF_CRM_1673255771"]).toList());
         setState(() {
           workOrders = works.map((work) => WorkOrder.fromJson(work)).toList();
           allWorkOrders = List.from(workOrders);
-          try {
-            listOfLsNumbers = works.map((element) {
-              var workFields = element["work_fields"];
-              var lsNumber =
-                  workFields != null ? workFields["Лицевой счет"] : 0;
-              var innerLsNumber = (lsNumber != null && lsNumber != 0)
-                  ? lsNumber["Лицевой счет"]
-                  : 0;
-              var finalValue = (innerLsNumber != null && innerLsNumber != 0)
-                  ? innerLsNumber["UF_CRM_1673255771"]
-                  : 0;
-
-              if (finalValue != null && finalValue != 0) {
-                print(finalValue);
-                listOfLsNumbersCopy.add(finalValue);
-                return finalValue;
-              } else {
-                // Handle the case where the value is null, if needed
-                return "Не указан"; // or return null
-              }
-            }).toList();
-          } catch (e) {
-            print(e);
-          }
+          lsListCopy = lsList;
           // Создание копии всех заказов
         });
       } else {
@@ -144,6 +176,21 @@ class _OutfitScreenState extends State<OutfitScreen> {
   //     _lsNumber = searchQuery;
   //   });
   // }
+  void filterWorkOrdersByLocation(String? location) {
+    // print("Location is $location");
+    setState(() {
+      if (location == null || location.isEmpty || location == "Все") {
+        workOrders = allWorkOrders;
+      } else {
+        workOrders = allWorkOrders
+            .where((workOrder) =>
+                workOrder.dynamicFields['work_fields']?["Наименование локации"]
+                    ?["Наименование локации"]?["UF_CRM_1678102336"] ==
+                location)
+            .toList();
+      }
+    });
+  }
 
   void filterWorkOrdersByDate(DateTime date) {
     setState(() {
@@ -374,56 +421,112 @@ class _OutfitScreenState extends State<OutfitScreen> {
           children: [
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  ElevatedButton(
-                    onPressed: () async {
-                      DateTime? pickedDate = await showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now(),
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2101),
-                        locale: const Locale('ru', 'RU'),
-                      );
-                      if (pickedDate != null) {
-                        filterWorkOrdersByDate(pickedDate);
-                      }
-                    },
-                    child: Text(selectedDate == null
-                        ? "Выбрать дату"
-                        : "Дата: ${DateFormat('dd.MM').format(selectedDate!)}"),
-                  ),
-                  DropdownButton<String>(
-                    value: selectedStatus,
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        selectedStatus = newValue;
-                        filterWorkOrdersByStatus(newValue);
-                      });
-                    },
-                    items: statusList
-                        .map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      // print(listOfLsNumbers.length);
-                       
-                      filterTodayWorkOrders();
-                    },
-                    child: Text('Сегодня'),
-                  ),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () async {
+                        DateTime? pickedDate = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(2101),
+                          locale: const Locale('ru', 'RU'),
+                        );
+                        if (pickedDate != null) {
+                          filterWorkOrdersByDate(pickedDate);
+                        }
+                      },
+                      child: Text(selectedDate == null
+                          ? "Выбрать дату"
+                          : "Дата: ${DateFormat('dd.MM').format(selectedDate!)}"),
+                    ),
+                    DropdownButton<String>(
+                      value: selectedStatus,
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedStatus = newValue;
+                          filterWorkOrdersByStatus(newValue);
+                        });
+                      },
+                      items: statusList
+                          .map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                    ),
+                    // ElevatedButton(
+                    //     onPressed: () {
+                    //       print("this is what inside list $lsList");
+                    //       print(
+                    //           "this is what inside copy list ${lsListCopy}");
+                    //     },
+                    //     child: Text("test")),
+                    ElevatedButton(
+                      onPressed: () {
+                        // print(listOfLsNumbers.length);
+
+                        filterTodayWorkOrders();
+                      },
+                      child: Text('Сегодня'),
+                    ),
+                  ],
+                ),
               ),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(
+                  horizontal: MediaQuery.of(context).size.width * 0.06,
+                  vertical: 3),
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width * 0.85,
+                child: TextField(
+                  onChanged: (value) {
+                    searchByLs(value);
+                    setState(() {
+                      if (value.isEmpty) {
+                        isSearching = false;
+                      } else {
+                        isSearching = true;
+                      }
+                    });
+                  },
+                  decoration: InputDecoration(
+                      hintText: "Поиск по лицевому счету",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      )),
+                ),
+              ),
+            ),
+            DropdownButton<String>(
+              value: _selectedLocation,
+              onChanged: (newValue) {
+                setState(() {
+                  _selectedLocation = newValue;
+                  filterWorkOrdersByLocation(newValue);
+                });
+              },
+              items: ['Все', ...listOfUniqueLocations].map((location) {
+                return DropdownMenuItem<String>(
+                  value: location,
+                  child: Text(
+                    location,
+                  ),
+                );
+              }).toList(),
+              hint: Text('Выберите локацию'),
             ),
             Expanded(
               child: RefreshIndicator(
-                onRefresh: _loadWorkOrders,
+                onRefresh: () async {
+                  // lsListCopy.clear();
+                  _loadWorkOrders();
+                },
                 child: workOrders.isEmpty
                     ? Center(
                         child: selectedDate == null
@@ -431,8 +534,11 @@ class _OutfitScreenState extends State<OutfitScreen> {
                             : Text('Нет нарядов для выбранной даты'),
                       )
                     : ListView.builder(
-                        itemCount: workOrders.length,
+                        itemCount:
+                            isSearching ? lsListCopy.length : workOrders.length,
+                        // itemCount: workOrders.length,
                         itemBuilder: (context, index) {
+                          // final lsNumber = [index];
                           final workOrder = workOrders[index];
                           String extractLocation(
                               Map<String, dynamic> dynamicFields) {
@@ -516,7 +622,9 @@ class _OutfitScreenState extends State<OutfitScreen> {
                                           'Дата  приезда: $trimmedDateString\n',
                                     ),
                                     TextSpan(
-                                        text: 'Лицевой счет:${_decider(listOfLsNumbers[index])}',
+                                        text:
+                                            "Лицевой счет: ${_decider(lsListCopy[index])}",
+                                        // text: 'Лицевой счет:${_decider(listOfLsNumbers[index])}',
                                         style: const TextStyle(
                                             color: Colors.green)),
                                     if (isCompleted) // Показать резолюцию, если наряд завершен
@@ -557,11 +665,11 @@ class _OutfitScreenState extends State<OutfitScreen> {
         ));
   }
 
-  String _decider(String? ls) {
-    if (ls != null) {
-      return ls;
+  String _decider(String ls) {
+    if (ls.isEmpty || ls == null) {
+      return "Не Указано";
     } else {
-      return "Неизвестный";
+      return ls;
     }
   }
 }

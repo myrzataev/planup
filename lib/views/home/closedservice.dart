@@ -399,9 +399,11 @@ class WorkOrder {
 
   factory WorkOrder.fromJson(Map<String, dynamic> json) {
     Map<String, dynamic> fields = json;
-
+// print(fields);
     // Извлечение желаемой даты приезда
-    String desiredArrivalDateString = json['work_fields']['Желаемая дата  приезда']['Желаемая дата  приезда']['UF_CRM_1673255749'];
+    String desiredArrivalDateString = json["works"]?['work_fields']?['Желаемая дата  приезда']?['Желаемая дата  приезда']?['UF_CRM_1673255749']??"2024-03-22T14:24:23+06:00";
+
+    print(desiredArrivalDateString);
     DateTime desiredArrivalDate = DateTime.parse(desiredArrivalDateString);
 
 

@@ -1,19 +1,13 @@
-import 'dart:convert';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'package:go_router/go_router.dart';
-import 'package:package_info/package_info.dart';
 
 import 'package:permission_handler/permission_handler.dart';
-import 'package:planup/views/home/choose_square.dart';
-import 'package:planup/views/home/see_pdf_screen.dart';
 import 'package:planup/views/home/webview_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../page3.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -44,7 +38,7 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Future<Map<String, String?>> getUserData() async {
-    final storage = FlutterSecureStorage();
+    final storage = const FlutterSecureStorage();
     Map<String, String?> userData = {
       'user_id': await storage.read(key: 'user_id'),
       'username': await storage.read(key: 'username'),
@@ -63,7 +57,7 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(70), // Установка высоты AppBar
+        preferredSize: const Size.fromHeight(70), // Установка высоты AppBar
         child: AppBar(
           centerTitle: false,
           title: RichText(
@@ -71,7 +65,7 @@ class _HomeViewState extends State<HomeView> {
               children: [
                 TextSpan(
                   text: username ?? 'Загрузка...', // Используем username здесь
-                  style: TextStyle(
+                  style: const TextStyle(
                       fontSize: 22.0,
                       color: Colors.black,
                       fontFamily: 'Gotham'),
@@ -82,7 +76,7 @@ class _HomeViewState extends State<HomeView> {
           ),
           flexibleSpace: Container(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
+              gradient: const LinearGradient(
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
                 colors: <Color>[Colors.red, Colors.purple],
@@ -92,7 +86,7 @@ class _HomeViewState extends State<HomeView> {
                   color: Colors.black.withOpacity(0.2),
                   spreadRadius: 5,
                   blurRadius: 7,
-                  offset: Offset(0, 3),
+                  offset: const Offset(0, 3),
                 ),
               ],
             ),
@@ -105,7 +99,7 @@ class _HomeViewState extends State<HomeView> {
             Container(
               alignment: Alignment.center,
               padding: const EdgeInsets.all(5),
-              margin: new EdgeInsets.symmetric(horizontal: 10.0),
+              margin: const EdgeInsets.symmetric(horizontal: 10.0),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10.0),
                 color: Colors.white,
@@ -114,7 +108,7 @@ class _HomeViewState extends State<HomeView> {
                     color: Colors.grey.withOpacity(0.5),
                     spreadRadius: 1,
                     blurRadius: 50,
-                    offset: Offset(0, 20), // changes position of shadow
+                    offset: const Offset(0, 20), // changes position of shadow
                   ),
                 ],
               ),
@@ -135,19 +129,19 @@ class _HomeViewState extends State<HomeView> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(80.0),
                               ),
-                              padding: EdgeInsets.all(0.0),
+                              padding: const EdgeInsets.all(0.0),
                             ),
                             child: Ink(
                               decoration: ShapeDecoration(
                                 color: Colors.white,
                                 shape: RoundedRectangleBorder(
-                                  side: BorderSide(
+                                  side: const BorderSide(
                                       width: 1, color: Color(0xFFFD4417)),
                                   borderRadius: BorderRadius.circular(15),
                                 ),
                               ),
                               child: Container(
-                                constraints: BoxConstraints(
+                                constraints: const BoxConstraints(
                                     maxWidth: 150.0, minHeight: 80.0),
                                 alignment: Alignment.center,
                                 child: Column(
@@ -213,19 +207,19 @@ class _HomeViewState extends State<HomeView> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20.0),
                               ),
-                              padding: EdgeInsets.all(0.0),
+                              padding: const EdgeInsets.all(0.0),
                             ),
                             child: Ink(
                               decoration: ShapeDecoration(
                                 color: Colors.white,
                                 shape: RoundedRectangleBorder(
-                                  side: BorderSide(
+                                  side: const BorderSide(
                                       width: 1, color: Color(0xFFFD4417)),
                                   borderRadius: BorderRadius.circular(15),
                                 ),
                               ),
                               child: Container(
-                                constraints: BoxConstraints(
+                                constraints: const BoxConstraints(
                                     maxWidth: 150.0, minHeight: 80.0),
                                 alignment: Alignment.center,
                                 child: Column(
@@ -240,7 +234,7 @@ class _HomeViewState extends State<HomeView> {
                                         height: 30.0,
                                       ),
                                     ),
-                                    Column(
+                                    const Column(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       crossAxisAlignment:
@@ -278,19 +272,19 @@ class _HomeViewState extends State<HomeView> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(80.0),
                               ),
-                              padding: EdgeInsets.all(0.0),
+                              padding: const EdgeInsets.all(0.0),
                             ),
                             child: Ink(
                               decoration: ShapeDecoration(
                                 color: Colors.white,
                                 shape: RoundedRectangleBorder(
-                                  side: BorderSide(
+                                  side: const BorderSide(
                                       width: 1, color: Color(0xFFFD4417)),
                                   borderRadius: BorderRadius.circular(15),
                                 ),
                               ),
                               child: Container(
-                                constraints: BoxConstraints(
+                                constraints: const BoxConstraints(
                                     maxWidth: 150.0, minHeight: 80.0),
                                 alignment: Alignment.center,
                                 child: Column(
@@ -304,7 +298,7 @@ class _HomeViewState extends State<HomeView> {
                                         height: 30.0,
                                       ),
                                     ),
-                                    Column(
+                                    const Column(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       crossAxisAlignment:
@@ -356,19 +350,19 @@ class _HomeViewState extends State<HomeView> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20.0),
                               ),
-                              padding: EdgeInsets.all(0.0),
+                              padding: const EdgeInsets.all(0.0),
                             ),
                             child: Ink(
                               decoration: ShapeDecoration(
                                 color: Colors.white,
                                 shape: RoundedRectangleBorder(
-                                  side: BorderSide(
+                                  side: const BorderSide(
                                       width: 1, color: Color(0xFFFD4417)),
                                   borderRadius: BorderRadius.circular(15),
                                 ),
                               ),
                               child: Container(
-                                constraints: BoxConstraints(
+                                constraints: const BoxConstraints(
                                     maxWidth: 150.0, minHeight: 80.0),
                                 alignment: Alignment.center,
                                 child: Column(
@@ -383,7 +377,7 @@ class _HomeViewState extends State<HomeView> {
                                         height: 30.0,
                                       ),
                                     ),
-                                    Column(
+                                    const Column(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       crossAxisAlignment:
@@ -430,19 +424,19 @@ class _HomeViewState extends State<HomeView> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(80.0),
                               ),
-                              padding: EdgeInsets.all(0.0),
+                              padding: const EdgeInsets.all(0.0),
                             ),
                             child: Ink(
                               decoration: ShapeDecoration(
                                 color: Colors.white,
                                 shape: RoundedRectangleBorder(
-                                  side: BorderSide(
+                                  side: const BorderSide(
                                       width: 1, color: Color(0xFFFD4417)),
                                   borderRadius: BorderRadius.circular(15),
                                 ),
                               ),
                               child: Container(
-                                constraints: BoxConstraints(
+                                constraints: const BoxConstraints(
                                     maxWidth: 150.0, minHeight: 80.0),
                                 alignment: Alignment.center,
                                 child: Column(
@@ -456,7 +450,7 @@ class _HomeViewState extends State<HomeView> {
                                         height: 30.0,
                                       ),
                                     ),
-                                    Column(
+                                    const Column(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       crossAxisAlignment:
@@ -508,19 +502,19 @@ class _HomeViewState extends State<HomeView> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(80.0),
                               ),
-                              padding: EdgeInsets.all(0.0),
+                              padding: const EdgeInsets.all(0.0),
                             ),
                             child: Ink(
                               decoration: ShapeDecoration(
                                 color: Colors.white,
                                 shape: RoundedRectangleBorder(
-                                  side: BorderSide(
+                                  side: const BorderSide(
                                       width: 1, color: Color(0xFFFD4417)),
                                   borderRadius: BorderRadius.circular(15),
                                 ),
                               ),
                               child: Container(
-                                constraints: BoxConstraints(
+                                constraints: const BoxConstraints(
                                     maxWidth: 150.0, minHeight: 80.0),
                                 alignment: Alignment.center,
                                 child: Column(
@@ -534,7 +528,7 @@ class _HomeViewState extends State<HomeView> {
                                         height: 30.0,
                                       ),
                                     ),
-                                    Column(
+                                  const  Column(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       crossAxisAlignment:
@@ -754,96 +748,14 @@ class _HomeViewState extends State<HomeView> {
                           ),
                         ]),
                   ),
-                  // Padding(
-                  //   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 7),
-                  //   child: Row(
-                  //     children: [
-                  //       Container(
-                  //         height: 100.0,
-                  //         margin: const EdgeInsets.all(0.0),
-                  //         child: ElevatedButton(
-                  //           onPressed: () async {
-                  //             SharedPreferences preferences =
-                  //                 await SharedPreferences.getInstance();
-                  //             final squares_id =
-                  //                 preferences.getInt("squares_id");
-                  //             Navigator.push(
-                  //                 context,
-                  //                 MaterialPageRoute(
-                  //                     builder: (context) => const ChooseSquareScreen(squareId: 9,)
-                  //                         ));
-                  //           },
-                  //           style: ElevatedButton.styleFrom(
-                  //             shape: RoundedRectangleBorder(
-                  //               borderRadius: BorderRadius.circular(80.0),
-                  //             ),
-                  //             padding: const EdgeInsets.all(0.0),
-                  //           ),
-                  //           child: Ink(
-                  //             decoration: ShapeDecoration(
-                  //               color: Colors.white,
-                  //               shape: RoundedRectangleBorder(
-                  //                 side: const BorderSide(
-                  //                     width: 1, color: Color(0xFFFD4417)),
-                  //                 borderRadius: BorderRadius.circular(15),
-                  //               ),
-                  //             ),
-                  //             child: Container(
-                  //               constraints: const BoxConstraints(
-                  //                   maxWidth: 150.0, minHeight: 80.0),
-                  //               alignment: Alignment.center,
-                  //               child: Column(
-                  //                 mainAxisAlignment: MainAxisAlignment.center,
-                  //                 children: [
-                  //                   Padding(
-                  //                     padding: const EdgeInsets.all(2.0),
-                  //                     child: Image.asset(
-                  //                       'asset/images/map.gif', // Укажите путь к вашему изображению
-                  //                       width: 30.0,
-                  //                       height: 30.0,
-                  //                     ),
-                  //                   ),
-                  //                   const Column(
-                  //                     mainAxisAlignment:
-                  //                         MainAxisAlignment.center,
-                  //                     crossAxisAlignment:
-                  //                         CrossAxisAlignment.center,
-                  //                     children: [
-                  //                       Text(
-                  //                         "Карта",
-                  //                         textAlign: TextAlign.center,
-                  //                         style: TextStyle(
-                  //                             fontSize: 14.0,
-                  //                             color: Colors.black,
-                  //                             fontFamily: 'Gotham'),
-                  //                         textScaler: TextScaler.noScaling,
-                  //                       ),
-                  //                       Text.rich(
-                  //                         TextSpan(
-                  //                           children: [
-                  //                             TextSpan(
-                  //                               text: 'Карта',
-                  //                               style: TextStyle(
-                  //                                 fontSize: 10,
-                  //                                 color: Colors.black45,
-                  //                                 fontFamily: 'Gotham',
-                  //                               ),
-                  //                             ),
-                  //                           ],
-                  //                         ),
-                  //                         textAlign: TextAlign.center,
-                  //                       ),
-                  //                     ],
-                  //                   ),
-                  //                 ],
-                  //               ),
-                  //             ),
-                  //           ),
-                  //         ),
-                  //       ),
-                  //     ],
-                  //   ),
-                  // )
+                  // ElevatedButton(onPressed: ()async {
+                  //   FlutterSecureStorage storage = const FlutterSecureStorage();
+
+                  //   final SharedPreferences preferences = await SharedPreferences.getInstance();
+                  //   final user_id = await storage.read(key: "user_id");
+                  //   print(preferences.getInt("user_id"));
+                  //   print(user_id);
+                  // }, child: Text("fsdf"))
                 ],
               ),
             ),
@@ -858,12 +770,12 @@ class NotificationPermissionWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      child: Text('Enable Notifications'),
+      child: const Text('Enable Notifications'),
       onPressed: () async {
         var status = await Permission.notification.status;
         if (status.isGranted) {
           // Notifications already granted
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Notification permission is already granted."),
           ));
         } else if (status.isDenied) {

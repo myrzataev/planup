@@ -360,16 +360,13 @@ class _HydraConnectState extends State<HydraConnect> {
               } else if (newValue.text.length == 2 || newValue.text.length == 5 || newValue.text.length == 8 || newValue.text.length == 11 || newValue.text.length == 14) {
                 // Добавляем двоеточие после каждых двух символов, кроме последнего двоеточия
                 return TextEditingValue(
-                  text: '${newValue.text.toLowerCase()}:',
+                  text: '${newValue.text.toUpperCase()}:',
                   selection: TextSelection.collapsed(offset: newValue.text.length + 1),
                 );
               }
               return newValue;
             }),
           ],
-          // onChanged: (value) {
-          //   print(value);
-          // },
           onChanged: (value) {
             bool isValid = value.length == 17;
             if (isMacAddressValid != isValid) {
