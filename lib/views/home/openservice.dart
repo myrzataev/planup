@@ -409,6 +409,7 @@ class _OpenServiceState extends State<OpenService> {
                                 'Локация Джалал-Абад': 'UF_CRM_1675071353',
                                 'Наименование локации': 'UF_CRM_1678102336',
                               };
+                              // print("Location keys entries: ${locationKeys.entries}");
 
                               for (var entry in locationKeys.entries) {
                                 final locationLabel = entry.key;

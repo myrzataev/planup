@@ -668,6 +668,7 @@ class _OutfitScreenState extends State<OutfitScreen> {
       return ls;
     }
   }
+  
 }
 
 class WorkOrder {

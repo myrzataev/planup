@@ -149,7 +149,7 @@ class _HydraConnectState extends State<HydraConnect> {
     final Uri uri = Uri.parse('http://185.39.79.84:8000/accounts/auto-connetction/');
     Map<String, dynamic> requestBody = {
 
-      "mac_address":"$macAddress",
+      "mac_address":"${macAddress.toLowerCase()}",
       "ls":"$accaunt",
       "tarif":"$selectedTariff",
       "tv":"$tv",
@@ -216,7 +216,7 @@ class _HydraConnectState extends State<HydraConnect> {
     final Uri uri = Uri.parse('http://185.39.79.84:8000/accounts/manual-input/');
     Map<String, dynamic> requestBody = {
 
-      'mac_address': macAddress,
+      'mac_address': macAddress.toLowerCase(),
     };
 
     // Кодирование данных в JSON
@@ -368,6 +368,7 @@ class _HydraConnectState extends State<HydraConnect> {
             }),
           ],
           onChanged: (value) {
+            print(value);
             bool isValid = value.length == 17;
             if (isMacAddressValid != isValid) {
               setState(() {

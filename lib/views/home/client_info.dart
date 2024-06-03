@@ -8,7 +8,6 @@ import 'package:planup/views/home/work_order_details_screen.dart';
 
 import 'openserviceget.dart';
 
-
 class Client_info extends StatefulWidget {
   const Client_info({Key? key}) : super(key: key);
 
@@ -23,7 +22,6 @@ class _Client_infoState extends State<Client_info> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   Future<void> _fetchUserData() async {
-
     setState(() {
       _loading = true; // Устанавливаем состояние загрузки в true
     });
@@ -35,11 +33,13 @@ class _Client_infoState extends State<Client_info> {
       body: jsonEncode({'ls_abonent': _lsController.text}),
     );
     setState(() {
-      _loading = false; // Устанавливаем состояние загрузки в false после получения ответа
+      _loading =
+          false; // Устанавливаем состояние загрузки в false после получения ответа
     });
     if (response.statusCode == 200) {
       setState(() {
-        _userData = jsonDecode(utf8.decode(response.bodyBytes)); // Коррекция кодировки
+        _userData =
+            jsonDecode(utf8.decode(response.bodyBytes)); // Коррекция кодировки
       });
     } else {
       throw Exception('Failed to load user data');
@@ -48,31 +48,30 @@ class _Client_infoState extends State<Client_info> {
 
   @override
   Widget build(BuildContext context) {
-
     List<List<String>> _services = [];
     String _tvPhoneNumber = '';
     String _abonent_phone = '';
 
     void _parseUserData() {
       if (_userData.containsKey('services')) {
-        _services = (_userData['services'] as List).map((item) => [
-          item[0].toString(),
-          item[1].toString(),
-          item[2].toString(),
-        ]).toList();
+        _services = (_userData['services'] as List)
+            .map((item) => [
+                  item[0].toString(),
+                  item[1].toString(),
+                  item[2].toString(),
+                ])
+            .toList();
       }
-      if (_userData.containsKey('tv_phone_number') && _userData['tv_phone_number'].isNotEmpty) {
+      if (_userData.containsKey('tv_phone_number') &&
+          _userData['tv_phone_number'].isNotEmpty) {
         _tvPhoneNumber = _userData['tv_phone_number'][0];
       }
 
-      if (_userData.containsKey('abonent_phone') && _userData['abonent_phone'].isNotEmpty) {
+      if (_userData.containsKey('abonent_phone') &&
+          _userData['abonent_phone'].isNotEmpty) {
         _abonent_phone = _userData['abonent_phone'][0];
       }
-
-
     }
-
-
 
     _parseUserData();
     return Scaffold(
@@ -96,58 +95,58 @@ class _Client_infoState extends State<Client_info> {
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              TextFormField(
-                controller: _lsController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Введите номер лицевого счета',
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                TextFormField(
+                  controller: _lsController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Введите номер лицевого счета',
+                  ),
                 ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _loading
+                      ? null
+                      : () {
+                          _fetchUserData();
+                          FocusScope.of(context)
+                              .unfocus(); // Закрываем клавиатуру
+                        },
+                  child: _loading
+                      ? CircularProgressIndicator()
+                      : Text('Получить информацию'),
+                ),
+                SizedBox(height: 20),
+                if (_userData.isNotEmpty) ...[
+                  Text('Лицевой счет: ${_userData['ls']}'),
+                  Divider(), // Разделитель
+                  Text('Имя: ${_userData['name']}'),
+                  Divider(), // Разделитель
+                  Text('Адрес: ${_userData['address'].join(', ')}'),
+                  Divider(), // Разделитель
+                  Text('Баланс: ${_userData['balance']}'),
+                  Divider(), // Разделитель
+                  Text('Телефон для ТВ: $_tvPhoneNumber'),
+                  Divider(), // Разделитель
+                  Text('Контакты: $_abonent_phone'),
+                  const Divider(), // Разделитель
+                  const Text('Услуги:'),
 
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _loading ? null : () {
-                  _fetchUserData();
-                  FocusScope.of(context).unfocus(); // Закрываем клавиатуру
-                },
-                child: _loading ? CircularProgressIndicator() : Text('Получить информацию'),
-              ),
+                  const Divider(), // Разделитель
+                  for (var service in _services)
+                    Text('${service[0]} - ${service[1]} (${service[2]})'),
 
-              SizedBox(height: 20),
-              if (_userData.isNotEmpty) ...[
-
-                Text('Лицевой счет: ${_userData['ls']}'),
-                Divider(), // Разделитель
-                Text('Имя: ${_userData['name']}'),
-                Divider(), // Разделитель
-                Text('Адрес: ${_userData['address'].join(', ')}'),
-                Divider(), // Разделитель
-                Text('Баланс: ${_userData['balance']}'),
-                Divider(), // Разделитель
-                Text('Телефон для ТВ: $_tvPhoneNumber'),
-                Divider(), // Разделитель
-                Text('Контакты: $_abonent_phone'),
-                Divider(), // Разделитель
-                Text('Услуги:'),
-
-
-                Divider(), // Разделитель
-                for (var service in _services)
-
-                  Text('${service[0]} - ${service[1]} (${service[2]})'),
-
-
-
-                Divider(), // Разделитель
+                  const Divider(), // Разделитель
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

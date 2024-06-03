@@ -1,8 +1,9 @@
 import 'dart:convert';
-  import 'dart:io';
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:http/http.dart';
 import 'package:planup/views/payment/pre_pay.dart';
@@ -11,9 +12,10 @@ import 'globals.dart' as globals;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:auto_reload/auto_reload.dart';
 
-
 import 'globals.dart';
-import 'history.dart';class NavBar extends StatefulWidget {
+import 'history.dart';
+
+class NavBar extends StatefulWidget {
   const NavBar({super.key});
   @override
   NavBarState createState() => NavBarState();
@@ -31,13 +33,16 @@ class NavBarState extends State<NavBar> {
     super.initState();
     getuser();
   }
+
   Future<void> deleteLoginFromSharedPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('login');
   }
+
   void delete() async {
     await deleteLoginFromSharedPreferences();
   }
+
   Future<void> getuser() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String login = prefs.getString('login') ?? "null";
@@ -56,17 +61,13 @@ class NavBarState extends State<NavBar> {
         _region = data['region'];
         _availbalance = data['avail_balance'].toString();
       });
-    }
-
-    else {
+    } else {
       final data = jsonDecode(utf8.decode(response.bodyBytes));
-      final errors= data['detail'];
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            duration: const Duration(seconds: 5),
-            content: Text(errors),
-          )
-      );
+      final errors = data['detail'];
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        duration: const Duration(seconds: 5),
+        content: Text(errors),
+      ));
     }
   }
 
@@ -78,8 +79,8 @@ class NavBarState extends State<NavBar> {
         children: [
           UserAccountsDrawerHeader(
             accountName: Text('$_surname $_name'),
-            accountEmail: Text("Доступный баланс: $_balance сом \nСумма оплат: $_availbalance \n$_region область" ),
-
+            accountEmail: Text(
+                "Доступный баланс: $_balance сом \nСумма оплат: $_availbalance \n$_region область"),
             currentAccountPicture: CircleAvatar(
               child: ClipOval(
                 child: Image.network(
@@ -118,14 +119,16 @@ class NavBarState extends State<NavBar> {
           Divider(),
           ListTile(
             leading: Icon(Icons.close),
-            title: Text('Выход'),
-            onTap: () {delete();
-            Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (_) => SignUpScreen()),
-            (route) => false,);
+            title: Text('Назад'),
+            onTap: () {
+              context.goNamed("Главная");
+              // delete();
+              // Navigator.of(context).pushAndRemoveUntil(
+              //   MaterialPageRoute(builder: (_) => SignUpScreen()),
+              //   (route) => false,
+              // );
             },
           ),
-
           Divider(),
           Text('Версия v1.2')
         ],
