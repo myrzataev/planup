@@ -42,7 +42,7 @@ class _LoginCheckState extends State<LoginCheck> {
     if (login != null) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const NavBar()),
+        MaterialPageRoute(builder: (context) => const NavBar()),
       );
     }
   }

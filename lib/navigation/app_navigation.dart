@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:planup/page3.dart';
@@ -21,8 +20,6 @@ import '../views/news/settings_view.dart';
 import '../views/start.dart';
 import '../views/wrapper/main_wrapper.dart';
 
-
-
 class AppNavigation {
   AppNavigation._();
 
@@ -36,7 +33,6 @@ class AppNavigation {
       GlobalKey<NavigatorState>(debugLabel: 'shellNews');
   static final _shellNavigatorAdd =
       GlobalKey<NavigatorState>(debugLabel: 'shellAdd');
-
 
   // GoRouter configuration
   static final GoRouter router = GoRouter(
@@ -62,8 +58,6 @@ class AppNavigation {
                 builder: (BuildContext context, GoRouterState state) =>
                     const HomeView(),
                 routes: [
-
-
                   GoRoute(
                     path: 'payment',
                     name: 'payment',
@@ -72,7 +66,7 @@ class AppNavigation {
                       child: const MyApp(),
                       transitionsBuilder:
                           (context, animation, secondaryAnimation, child) =>
-                          FadeTransition(opacity: animation, child: child),
+                              FadeTransition(opacity: animation, child: child),
                     ),
                   ),
                   // GoRoute(
@@ -87,27 +81,37 @@ class AppNavigation {
                   //   ),
                   // ),
 
-
                   GoRoute(
                     path: 'closedservice',
                     name: 'closedservice',
                     pageBuilder: (context, state) => CustomTransitionPage<void>(
                       key: state.pageKey,
-                      child:  const OutfitScreenOld(),
+                      child: const OutfitScreenOld(),
                       transitionsBuilder:
                           (context, animation, secondaryAnimation, child) =>
-                          FadeTransition(opacity: animation, child: child),
+                              FadeTransition(opacity: animation, child: child),
                     ),
                   ),
+                  //    GoRoute(
+                  //   path: 'localpay',
+                  //   name: 'localpay',
+                  //   pageBuilder: (context, state) => CustomTransitionPage<void>(
+                  //     key: state.pageKey,
+                  //     child: const OutfitScreenOld(),
+                  //     transitionsBuilder:
+                  //         (context, animation, secondaryAnimation, child) =>
+                  //             FadeTransition(opacity: animation, child: child),
+                  //   ),
+                  // ),
                   GoRoute(
                     path: 'createservice',
                     name: 'createservice',
                     pageBuilder: (context, state) => CustomTransitionPage<void>(
                       key: state.pageKey,
-                      child:  const Createservice(),
+                      child: const Createservice(),
                       transitionsBuilder:
                           (context, animation, secondaryAnimation, child) =>
-                          FadeTransition(opacity: animation, child: child),
+                              FadeTransition(opacity: animation, child: child),
                     ),
                   ),
                   GoRoute(
@@ -115,10 +119,10 @@ class AppNavigation {
                     name: 'openservice',
                     pageBuilder: (context, state) => CustomTransitionPage<void>(
                       key: state.pageKey,
-                      child:  const OpenService(),
+                      child: const OpenService(),
                       transitionsBuilder:
                           (context, animation, secondaryAnimation, child) =>
-                          FadeTransition(opacity: animation, child: child),
+                              FadeTransition(opacity: animation, child: child),
                     ),
                   ),
                   GoRoute(
@@ -127,10 +131,10 @@ class AppNavigation {
                     name: "myservices",
                     pageBuilder: (context, state) => CustomTransitionPage<void>(
                       key: state.pageKey,
-                      child:  const OutfitScreen(),
+                      child: const OutfitScreen(),
                       transitionsBuilder:
                           (context, animation, secondaryAnimation, child) =>
-                          FadeTransition(opacity: animation, child: child),
+                              FadeTransition(opacity: animation, child: child),
                     ),
                     routes: [
                       GoRoute(
@@ -145,16 +149,15 @@ class AppNavigation {
                     ],
                   ),
 
-
                   GoRoute(
                     path: 'searchclient',
                     name: 'searchclient',
                     pageBuilder: (context, state) => CustomTransitionPage<void>(
                       key: state.pageKey,
-                      child:  const Client_info(),
+                      child: const Client_info(),
                       transitionsBuilder:
                           (context, animation, secondaryAnimation, child) =>
-                          FadeTransition(opacity: animation, child: child),
+                              FadeTransition(opacity: animation, child: child),
                     ),
                   ),
                   GoRoute(
@@ -169,21 +172,18 @@ class AppNavigation {
                     name: 'scanmac',
                     pageBuilder: (context, state) => CustomTransitionPage<void>(
                       key: state.pageKey,
-                      child:  Scanmac(),
+                      child: Scanmac(),
                       transitionsBuilder:
                           (context, animation, secondaryAnimation, child) =>
-                          FadeTransition(opacity: animation, child: child),
+                              FadeTransition(opacity: animation, child: child),
                     ),
                   ),
-
                 ],
               ),
             ],
           ),
 
           /// Brach Setting
-
-
 
           StatefulShellBranch(
             navigatorKey: _shellNavigatorAdd,
@@ -192,15 +192,12 @@ class AppNavigation {
                 path: "/addd",
                 name: "sdsdsd",
                 builder: (BuildContext context, GoRouterState state) =>
-                const SettingScreen(),
-
+                    const SettingScreen(),
               ),
             ],
           ),
-
         ],
       ),
-
 
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
@@ -210,7 +207,6 @@ class AppNavigation {
           key: state.pageKey,
         ),
       ),
-
 
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

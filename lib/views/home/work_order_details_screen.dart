@@ -18,8 +18,12 @@ import 'myservice.dart';
 
 class WorkOrderDetailsScreen extends StatefulWidget {
   final WorkOrder workOrder;
-
-  WorkOrderDetailsScreen({required this.workOrder});
+  final String location;
+  bool isTransering;
+  WorkOrderDetailsScreen(
+      {required this.workOrder,
+      required this.location,
+      this.isTransering = false});
 
   @override
   _WorkOrderDetailsScreenState createState() => _WorkOrderDetailsScreenState();
@@ -303,13 +307,25 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
       final innerMap = entry.value as Map<String, dynamic>;
       return innerMap.entries
           .where((innerEntry) =>
-              innerEntry.key.contains('Локация Чуй') ||
-              innerEntry.key.contains('Локация Иссык-Куль') ||
-              innerEntry.key.contains('Локация Нарын') ||
-              innerEntry.key.contains('Локация Ош') ||
-              innerEntry.key.contains('Локация Талас') ||
-              innerEntry.key.contains('Локация Джалал-Абад') ||
-              innerEntry.key.contains('Наименование локации') ||
+              !(innerEntry.key.contains('Локация Чуй') &&
+                      entry.value["Локация Чуй"]?["UF_CRM_1675072231"] !=
+                          'Не выбрано') &&
+                  !(innerEntry.key.contains('Локация Иссык-Куль') &&
+                      entry.value["Локация Иссык-Куль"]?["UF_CRM_1675071171"] !=
+                          'Не выбрано') &&
+                  !(innerEntry.key.contains('Локация Нарын') &&
+                      entry.value["Локация Нарын"]?["UF_CRM_1675071012"] !=
+                          'Не выбрано') &&
+                  !(innerEntry.key.contains('Локация Ош') &&
+                      entry.value["Локация Ош"]?["UF_CRM_1675070693"] !=
+                          'Не выбрано') &&
+                  !(innerEntry.key.contains('Локация Талас') &&
+                      entry.value["Локация Талас"]?["UF_CRM_1675070436"] !=
+                          'Не выбрано') &&
+                  !(innerEntry.key.contains('Локация Джалал-Абад') &&
+                      entry.value["Локация Талас"]?["UF_CRM_1675071353"] !=
+                          'Не выбрано') &&
+                  innerEntry.key.contains('Наименование локации') ||
               innerEntry.key.contains('Адрес') ||
               innerEntry.key.contains('Желаемая дата  приезда') ||
               innerEntry.key.contains('Контакт'))
@@ -371,11 +387,17 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
             ],
           );
         } else {
-          return ListTile(
-            leading: Icon(Icons.location_on), // Иконка местоположения
-            title: Text(cleanedKey),
-            subtitle: Text(value),
-          );
+          return widget.isTransering
+              ? ListTile(
+                  leading: Icon(Icons.location_on), // Иконка местоположения
+                  title: Text(cleanedKey),
+                  subtitle: Text(widget.location),
+                )
+              : ListTile(
+                  leading: Icon(Icons.location_on), // Иконка местоположения
+                  title: Text(cleanedKey),
+                  subtitle: Text(value),
+                );
         }
       });
     }).toList();
@@ -913,7 +935,8 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
                   return null;
                 },
                 value: selectedValues[sendKey],
-                style: TextStyle(overflow: TextOverflow.ellipsis, color: Colors.black),
+                style: TextStyle(
+                    overflow: TextOverflow.ellipsis, color: Colors.black),
                 onChanged: (newValue) {
                   print(newValue);
                   setState(() {
@@ -925,7 +948,6 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
                 // hint: Text("choose"),
                 decoration: InputDecoration(
                   labelText: sendKey,
-                  
                 ),
               ),
             ),
@@ -1229,10 +1251,10 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
                   onPressed: () {
                     // print(_formKey.currentState);
                     // if (_formKey.currentState!.validate()
-                            // _formKeyForButton.currentState!.validate()
-                        // _selectedOption != null
-                        // ) {
-                      _endWithConfirmation();
+                    // _formKeyForButton.currentState!.validate()
+                    // _selectedOption != null
+                    // ) {
+                    _endWithConfirmation();
                     // } else {
                     //   // _errorText = 'Please select an option';
                     //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(

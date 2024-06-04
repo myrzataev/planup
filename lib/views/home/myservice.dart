@@ -27,6 +27,8 @@ class _OutfitScreenState extends State<OutfitScreen> {
   bool isSearching = false;
   List<dynamic> listOfLocations = [];
   List<dynamic> listOfUniqueLocations = [];
+  Map<String, dynamic> jsonMap = {};
+  List<dynamic> listOfRegions = [];
   @override
   void initState() {
     super.initState();
@@ -117,6 +119,7 @@ class _OutfitScreenState extends State<OutfitScreen> {
       print(response.statusCode);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+
         // if (data != null && data['works'] != null) {
         //   for (var work in data['works']) {
         //   var date = work['work_fields']?['Желаемая дата  приезда']?['Желаемая дата  приезда']?['UF_CRM_1673255749'];
@@ -129,7 +132,52 @@ class _OutfitScreenState extends State<OutfitScreen> {
         //     }
         //   }
         // }
+        // jsonMap = data;
         final List<dynamic> works = data['works'];
+        // final List<dynamic> worksTest = data['works'][0]["work_fields"];
+
+        listOfRegions = works
+            .where((element) =>
+                element["type_deal"] ==
+                "Перенос подкл") // Filter works by type_deal
+            .map((element) {
+              final workFields =
+                  element["work_fields"] as Map<String, dynamic>?;
+
+              // Ensure workFields is not null
+              if (workFields == null) return [];
+
+              // Filter fields that contain "Локация" and are not "Не выбрано"
+              return workFields.entries
+                  .where((e) => e.key.toLowerCase().contains("локация"))
+                  .where((e) {
+                    final nestedMap = e.value as Map<String, dynamic>?;
+                    if (nestedMap == null) return false;
+
+                    final firstNestedValue =
+                        nestedMap.values.first as Map<String, dynamic>?;
+                    if (firstNestedValue == null) return false;
+
+                    final value = firstNestedValue.values.first;
+                    return value != "Не выбрано";
+                  })
+                  .map((e) {
+                    final nestedMap = e.value as Map<String, dynamic>?;
+                    if (nestedMap == null) return '';
+
+                    final firstNestedValue =
+                        nestedMap.values.first as Map<String, dynamic>?;
+                    if (firstNestedValue == null) return '';
+
+                    return firstNestedValue.values.first.toString();
+                  })
+                  .where((value) =>
+                      value.isNotEmpty) // Filter out any empty values
+                  .toList();
+            })
+            .expand((x) => x) // Flatten the list of lists
+            .toList();
+
         lsList = works.map(
           (e) {
             return e["work_fields"]?["Лицевой счет"]?["Лицевой счет"]
@@ -530,8 +578,8 @@ class _OutfitScreenState extends State<OutfitScreen> {
                 child: workOrders.isEmpty
                     ? Center(
                         child: selectedDate == null
-                            ? Text('Выберите дату для фильтрации нарядов')
-                            : Text('Нет нарядов для выбранной даты'),
+                            ? const Text('Выберите дату для фильтрации нарядов')
+                            : const Text('Нет нарядов для выбранной даты'),
                       )
                     : ListView.builder(
                         itemCount:
@@ -568,7 +616,21 @@ class _OutfitScreenState extends State<OutfitScreen> {
                           String location =
                               extractLocation(workOrder.dynamicFields);
                           String executor = workOrder
-                                  .dynamicFields['work_fields']['Адрес']['Адрес']['UF_CRM_1674993837284'].split('|').first ??'Не указано';
+                                  .dynamicFields['work_fields']?['Адрес']
+                                      ?['Адрес']?['UF_CRM_1674993837284']
+                                  .split('|')
+                                  .first ??
+                              'Не указано';
+                          String transferAddress = workOrder
+                                  .dynamicFields['work_fields']
+                                      ?['Адрес переноса']?['Адрес переноса']
+                                      ?['UF_CRM_1715681738756']
+                                  .split('|')
+                                  .first ??
+                              'Не указано';
+                          String typeDeal =
+                              workOrder.dynamicFields['type_deal'] ??
+                                  "Не указано";
                           String accountNumber = workOrder
                                   .dynamicFields['status_work_id']
                                   .toString() ??
@@ -580,9 +642,6 @@ class _OutfitScreenState extends State<OutfitScreen> {
                           String trimmedDateString =
                               desiredArrivalDateString.substring(
                                   0, desiredArrivalDateString.length - 15);
-                          // String? lsNumber = workOrder
-                          //         .dynamicFields['work_fields']['Лицевой счет']
-                          //     ['Лицевой счет']['UF_CRM_1673255771'];
 
                           Map<String, dynamic> statusInfo =
                               getStatusMessage(accountNumber);
@@ -607,9 +666,13 @@ class _OutfitScreenState extends State<OutfitScreen> {
                                 text: TextSpan(
                                   style: DefaultTextStyle.of(context).style,
                                   children: <TextSpan>[
-                                    TextSpan(
-                                        text:
-                                            'Локация: $location\nАдрес: $executor\n'),
+                                    isTransferredAddress(typeDeal)
+                                        ? TextSpan(
+                                            text:
+                                                "Локация: ${listOfRegions.first??""}\nАдрес переноса: $transferAddress\n")
+                                        : TextSpan(
+                                            text:
+                                                'Локация: $location\nАдрес: $executor\n'),
                                     TextSpan(
                                         text: 'Статус: $statusMessage\n',
                                         style: TextStyle(color: statusColor)),
@@ -642,11 +705,15 @@ class _OutfitScreenState extends State<OutfitScreen> {
                                     : statusColor, // Цвет для резолюции или статуса
                               ),
                               onTap: () {
+                                // print(listOfRegions);
+
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) =>
                                         WorkOrderDetailsScreen(
+                                          isTransering: isTransferredAddress(typeDeal),
+                                          location: listOfRegions.first??"",
                                             workOrder: workOrder),
                                   ),
                                 );
@@ -668,7 +735,24 @@ class _OutfitScreenState extends State<OutfitScreen> {
       return ls;
     }
   }
-  
+
+  bool isTransferredAddress(String typeDeal) {
+    if (typeDeal == "Перенос подкл") {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  // String filter(String location){
+  //   switch (location){
+  //     case "Локация Ош":
+  //     return "UF_CRM_1675070693";
+  //     case "Локация Талас"
+  //   }
+  // }
+  // String locationName(String location){
+  //   if(location == )
+  // }
 }
 
 class WorkOrder {

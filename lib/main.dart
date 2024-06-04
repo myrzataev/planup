@@ -147,7 +147,7 @@ class MyApp extends StatelessWidget {
           if (response.statusCode == 200) {
             var responseData = await json.decode(response.body);
             int? squares_id = responseData["squares_id"];
-            preferences.setInt("squares_id", squares_id!);
+            preferences.setInt("squares_id", squares_id??0);
             PackageInfo packageInfo = await PackageInfo.fromPlatform();
             final storage = FlutterSecureStorage();
             final version = packageInfo.version;

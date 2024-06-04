@@ -766,6 +766,8 @@ class _HomeViewState extends State<HomeView> {
   }
 }
 
+
+
 class NotificationPermissionWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {

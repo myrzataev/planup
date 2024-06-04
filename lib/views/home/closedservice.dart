@@ -7,7 +7,6 @@ import 'dart:async';
 
 import 'package:planup/views/home/workold.dart';
 
-
 class OutfitScreenOld extends StatefulWidget {
   const OutfitScreenOld({Key? key}) : super(key: key);
 
@@ -20,24 +19,20 @@ class _OutfitScreenOldState extends State<OutfitScreenOld> {
   DateTime? selectedDate;
   bool _isInit = true;
 
-
-
   @override
   void initState() {
     super.initState();
     _loadWorkOrders();
-
   }
-
 
   @override
   void dispose() {
-
     super.dispose();
   }
-  List<WorkOrder> allWorkOrders = []; // Добавьте переменную для хранения всех заказов
-  String? selectedStatus;
 
+  List<WorkOrder> allWorkOrders =
+      []; // Добавьте переменную для хранения всех заказов
+  String? selectedStatus;
 
   @override
   void didChangeDependencies() {
@@ -48,15 +43,15 @@ class _OutfitScreenOldState extends State<OutfitScreenOld> {
       _isInit = false;
     }
   }
+
   final storage = FlutterSecureStorage();
-
-
 
   Future<void> _loadWorkOrders() async {
     final username = await storage.read(key: 'user_id');
 
     try {
-      final uri = Uri.parse('http://planup.skynet.kg:8000/planup/works_status/');
+      final uri =
+          Uri.parse('http://planup.skynet.kg:8000/planup/works_status/');
       final headers = {'Content-Type': 'application/x-www-form-urlencoded'};
       final body = {'user_id': '$username'};
 
@@ -65,7 +60,8 @@ class _OutfitScreenOldState extends State<OutfitScreenOld> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
 
-        final List<dynamic> works = data['works_status']; // Получение списка заказов из ответа сервера
+        final List<dynamic> works =
+            data['works_status']; // Получение списка заказов из ответа сервера
 
         setState(() {
           workOrders = works.map((work) => WorkOrder.fromJson(work)).toList();
@@ -91,16 +87,20 @@ class _OutfitScreenOldState extends State<OutfitScreenOld> {
     }
   }
 
- void filterWorkOrdersByLs(String? searchQuery) {
+  void filterWorkOrdersByLs(String? searchQuery) {
     setState(() {
       if (searchQuery == null || searchQuery.isEmpty) {
         workOrders = List.from(allWorkOrders);
       } else {
         workOrders = allWorkOrders
-            .where((workOrder) => workOrder.dynamicFields['work_fields']
-                    ["Лицевой счет"]["Лицевой счет"]["UF_CRM_1673255771"]
-                .toString()
-                .contains(searchQuery))
+            .where((workOrder) =>
+                    (workOrder.dynamicFields['work_fields']?["Лицевой счет"]
+                                    ?["Лицевой счет"]?["UF_CRM_1673255771"]
+                                ?.toString() ??
+                            '')
+                        .contains(searchQuery ?? '') ==
+                    true // Compare against true to ensure a non-nullable boolean
+                )
             .toList();
       }
     });
@@ -130,11 +130,11 @@ class _OutfitScreenOldState extends State<OutfitScreenOld> {
     });
   }
 
-
   void filterAllWorkOrders() {
     setState(() {
       selectedDate = null;
-      workOrders = List.from(allWorkOrders); // Возвращение к полному списку всех заказов
+      workOrders =
+          List.from(allWorkOrders); // Возвращение к полному списку всех заказов
     });
   }
 
@@ -142,7 +142,8 @@ class _OutfitScreenOldState extends State<OutfitScreenOld> {
     setState(() {
       selectedStatus = status;
       if (status.isEmpty) {
-        workOrders = List.from(allWorkOrders); // Если статус не выбран, показать все заказы
+        workOrders = List.from(
+            allWorkOrders); // Если статус не выбран, показать все заказы
       } else {
         workOrders = allWorkOrders.where((workOrder) {
           return workOrder.dynamicFields['status_work_id'].toString() == status;
@@ -150,8 +151,6 @@ class _OutfitScreenOldState extends State<OutfitScreenOld> {
       }
     });
   }
-
-
 
   Map<String, dynamic> getStatusMessage(String statusId) {
     IconData statusIcon;
@@ -161,21 +160,38 @@ class _OutfitScreenOldState extends State<OutfitScreenOld> {
         return {'message': 'Не начат', 'color': Colors.red, 'icon': statusIcon};
       case '2':
         statusIcon = Icons.directions_bus; // Icon for "В пути"
-        return {'message': 'В пути', 'color': Colors.yellow, 'icon': statusIcon};
+        return {
+          'message': 'В пути',
+          'color': Colors.yellow,
+          'icon': statusIcon
+        };
       case '3':
         statusIcon = Icons.play_arrow; // Icon for "Начат"
         return {'message': 'Начат', 'color': Colors.blue, 'icon': statusIcon};
       case '4':
         statusIcon = Icons.check_circle; // Icon for "Завершен"
-        return {'message': 'Завершен', 'color': Colors.green, 'icon': statusIcon};
+        return {
+          'message': 'Завершен',
+          'color': Colors.green,
+          'icon': statusIcon
+        };
       case '5':
         statusIcon = Icons.pause_circle; // Icon for "Завершен"
-        return {'message': 'Приостановлен', 'color': Colors.yellow, 'icon': statusIcon};
+        return {
+          'message': 'Приостановлен',
+          'color': Colors.yellow,
+          'icon': statusIcon
+        };
       default:
         statusIcon = Icons.help_outline; // Icon for "Неизвестный статус"
-        return {'message': 'Неизвестный статус', 'color': Colors.grey, 'icon': statusIcon};
+        return {
+          'message': 'Неизвестный статус',
+          'color': Colors.grey,
+          'icon': statusIcon
+        };
     }
   }
+
   Map<String, dynamic> getResolutionMessage(String resolutionId) {
     IconData resolutionIcon = Icons.help_outline; // Дефолтная иконка
     String message = 'Неизвестная резолюция';
@@ -300,7 +316,9 @@ class _OutfitScreenOldState extends State<OutfitScreenOld> {
                       filterWorkOrdersByDate(pickedDate);
                     }
                   },
-                  child: Text(selectedDate == null ? "Выбрать дату" : "Дата: ${DateFormat('dd.MM').format(selectedDate!)}"),
+                  child: Text(selectedDate == null
+                      ? "Выбрать дату"
+                      : "Дата: ${DateFormat('dd.MM').format(selectedDate!)}"),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -316,122 +334,151 @@ class _OutfitScreenOldState extends State<OutfitScreenOld> {
                 ),
               ],
             ),
-              Padding(
-                  padding: EdgeInsets.symmetric(
-                      horizontal: MediaQuery.of(context).size.width * 0.06,
-                      vertical: 3),
-                  child: SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.85,
-                    child: TextField(
-                      keyboardType: TextInputType.number,
-                      onChanged: (value) {
-                        setState(() {
-                          filterWorkOrdersByLs(value);
+            Padding(
+              padding: EdgeInsets.symmetric(
+                  horizontal: MediaQuery.of(context).size.width * 0.06,
+                  vertical: 3),
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width * 0.85,
+                child: TextField(
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    setState(() {
+                      filterWorkOrdersByLs(value);
 
-                          // if (value.isEmpty) {
-                          //   // isSearching = false;
-                          // } else {
-                          //   // isSearching = true;
-                          // }
-                        });
-                      },
-                      decoration: InputDecoration(
-                          hintText: "Поиск по лицевому счету",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          )),
-                    ),
-                  ),
+                      // if (value.isEmpty) {
+                      //   // isSearching = false;
+                      // } else {
+                      //   // isSearching = true;
+                      // }
+                    });
+                  },
+                  decoration: InputDecoration(
+                      hintText: "Поиск по лицевому счету",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      )),
                 ),
+              ),
+            ),
             Expanded(
               child: RefreshIndicator(
                 onRefresh: _loadWorkOrders,
                 child: workOrders.isEmpty
                     ? Center(
-                  child: selectedDate == null
-                      ? Text('Выберите дату для фильтрации нарядов')
-                      : Text('Нет нарядов для выбранной даты'),
-                )
-                    :ListView.builder(
-                  itemCount: workOrders.length,
-                  itemBuilder: (context, index) {
-                    final workOrder = workOrders[index];
-                    String extractLocation(Map<String, dynamic> dynamicFields) {
-                      const locationKeys = {
-                        'Локация Чуй': 'UF_CRM_1675072231',
-                        'Локация Иссык-Куль': 'UF_CRM_1675071171',
-                        'Локация Нарын': 'UF_CRM_1675071012',
-                        'Локация Ош': 'UF_CRM_1675070693',
-                        'Локация Талас': 'UF_CRM_1675070436',
-                        'Локация Джалал-Абад': 'UF_CRM_1675071353',
-                        'Наименование локации': 'UF_CRM_1678102336',
-                      };
+                        child: selectedDate == null
+                            ? Text('Выберите дату для фильтрации нарядов')
+                            : Text('Нет нарядов для выбранной даты'),
+                      )
+                    : ListView.builder(
+                        itemCount: workOrders.length,
+                        itemBuilder: (context, index) {
+                          final workOrder = workOrders[index];
+                          String extractLocation(
+                              Map<String, dynamic> dynamicFields) {
+                            const locationKeys = {
+                              'Локация Чуй': 'UF_CRM_1675072231',
+                              'Локация Иссык-Куль': 'UF_CRM_1675071171',
+                              'Локация Нарын': 'UF_CRM_1675071012',
+                              'Локация Ош': 'UF_CRM_1675070693',
+                              'Локация Талас': 'UF_CRM_1675070436',
+                              'Локация Джалал-Абад': 'UF_CRM_1675071353',
+                              'Наименование локации': 'UF_CRM_1678102336',
+                            };
 
-                      for (var entry in locationKeys.entries) {
-                        final locationLabel = entry.key;
-                        final locationId = entry.value;
-                        final locationValue = dynamicFields['work_fields'][locationLabel]?[locationLabel]?[locationId];
-                        if (locationValue != null && locationValue.isNotEmpty) {
-                          return locationValue;
-                        }
-                      }
-                      return 'Не указано';
-                    }
+                            for (var entry in locationKeys.entries) {
+                              final locationLabel = entry.key;
+                              final locationId = entry.value;
+                              final locationValue = dynamicFields['work_fields']
+                                  [locationLabel]?[locationLabel]?[locationId];
+                              if (locationValue != null &&
+                                  locationValue.isNotEmpty) {
+                                return locationValue;
+                              }
+                            }
+                            return 'Не указано';
+                          }
 
-                    String location = extractLocation(workOrder.dynamicFields);
-                    String executor = workOrder.dynamicFields['work_fields']['Адрес']['Адрес']['UF_CRM_1674993837284'].split('|').first ?? 'Не указано';
-                    String lsNumber = workOrder.dynamicFields['work_fields']["Лицевой счет"]["Лицевой счет"]["UF_CRM_1673255771"]?? "Не указано";
-                    String accountNumber = workOrder.dynamicFields['status_work_id'].toString() ?? '0';
-                    Map<String, dynamic> statusInfo = getStatusMessage(accountNumber);
-                    String statusMessage = statusInfo['message'];
-                    Color statusColor = statusInfo['color'];
+                          String location =
+                              extractLocation(workOrder.dynamicFields);
+                          String executor = workOrder
+                                  .dynamicFields['work_fields']['Адрес']['Адрес']['UF_CRM_1674993837284'].split('|')
+                                  .first ??
+                              'Не указано';
+                          String lsNumber =
+                              workOrder.dynamicFields['work_fields']?["Лицевой счет"]?["Лицевой счет"]?["UF_CRM_1673255771"] ??"Не указано";
+                          String accountNumber = workOrder
+                                  .dynamicFields['status_work_id']
+                                  .toString() ??
+                              '0';
+                          Map<String, dynamic> statusInfo =
+                              getStatusMessage(accountNumber);
+                          String statusMessage = statusInfo['message'];
+                          Color statusColor = statusInfo['color'];
 
-                    // Извлеките информацию о резолюции, если наряд завершен
-                    String resolutionId = workOrder.dynamicFields['resolution_work_id']?.toString() ?? 'нет резолюции';
-                    Map<String, dynamic> resolutionInfo = getResolutionMessage(resolutionId);
-                    bool isCompleted = accountNumber == '4'; // Предположим, что '4' это статус "Завершен"
+                          // Извлеките информацию о резолюции, если наряд завершен
+                          String resolutionId = workOrder
+                                  .dynamicFields['resolution_work_id']
+                                  ?.toString() ??
+                              'нет резолюции';
+                          Map<String, dynamic> resolutionInfo =
+                              getResolutionMessage(resolutionId);
+                          bool isCompleted = accountNumber ==
+                              '4'; // Предположим, что '4' это статус "Завершен"
 
-                    return Card(
-                      child: ListTile(
-                        title: Text('Наряд: ${workOrder.dynamicFields['type_deal']}'),
-                        subtitle: RichText(
-                          text: TextSpan(
-                            style: DefaultTextStyle.of(context).style,
-                            children: <TextSpan>[
-                              TextSpan(text: 'Локация: $location\nАдрес: $executor\n'),
-                               TextSpan(text: 'Лицевой счет: $lsNumber\n'),
-                              TextSpan(text: 'Статус: $statusMessage', style: TextStyle(color: statusColor)),
-                              if (isCompleted) // Показать резолюцию, если наряд завершен
-                                TextSpan(text: '\nРезолюция: ${resolutionInfo['message']}\n', style: TextStyle(color: resolutionInfo['color'])),
-                               
-                            ],
-                          ),
-                        ),
-                        leading: Icon(
-                          isCompleted ? resolutionInfo['icon'] : statusInfo['icon'], // Иконка для резолюции или статуса
-                          color: isCompleted ? resolutionInfo['color'] : statusColor, // Цвет для резолюции или статуса
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => WorkOrderDetailsScreens( workOrders: workOrder),
+                          return Card(
+                            child: ListTile(
+                              title: Text(
+                                  'Наряд: ${workOrder.dynamicFields['type_deal']}'),
+                              subtitle: RichText(
+                                text: TextSpan(
+                                  style: DefaultTextStyle.of(context).style,
+                                  children: <TextSpan>[
+                                    TextSpan(
+                                        text:
+                                            'Локация: $location\nАдрес: $executor\n'),
+                                    TextSpan(text: 'Лицевой счет: $lsNumber\n'),
+                                    TextSpan(
+                                        text: 'Статус: $statusMessage',
+                                        style: TextStyle(color: statusColor)),
+                                    if (isCompleted) // Показать резолюцию, если наряд завершен
+                                      TextSpan(
+                                          text:
+                                              '\nРезолюция: ${resolutionInfo['message']}\n',
+                                          style: TextStyle(
+                                              color: resolutionInfo['color'])),
+                                  ],
+                                ),
+                              ),
+                              leading: Icon(
+                                isCompleted
+                                    ? resolutionInfo['icon']
+                                    : statusInfo[
+                                        'icon'], // Иконка для резолюции или статуса
+                                color: isCompleted
+                                    ? resolutionInfo['color']
+                                    : statusColor, // Цвет для резолюции или статуса
+                              ),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        WorkOrderDetailsScreens(
+                                            workOrders: workOrder),
+                                  ),
+                                );
+                              },
                             ),
                           );
                         },
                       ),
-                    );
-                  },
-                ),
-
               ),
             ),
           ],
         ));
   }
 }
-
-
 
 class WorkOrder {
   final Map<String, dynamic> dynamicFields;
@@ -446,11 +493,13 @@ class WorkOrder {
     Map<String, dynamic> fields = json;
 // print(fields);
     // Извлечение желаемой даты приезда
-    String desiredArrivalDateString = json["works"]?['work_fields']?['Желаемая дата  приезда']?['Желаемая дата  приезда']?['UF_CRM_1673255749']??"2024-03-22T14:24:23+06:00";
+    String desiredArrivalDateString = json["works"]?['work_fields']
+                ?['Желаемая дата  приезда']?['Желаемая дата  приезда']
+            ?['UF_CRM_1673255749'] ??
+        "2024-03-22T14:24:23+06:00";
 
     print(desiredArrivalDateString);
     DateTime desiredArrivalDate = DateTime.parse(desiredArrivalDateString);
-
 
     return WorkOrder(
       dynamicFields: fields,

@@ -317,7 +317,7 @@ class _OpenServiceState extends State<OpenService> {
                           },
                         ),
                       ),
-                     const SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       DropdownButton<String>(
                         value: _selectedTypeDeal,
                         onChanged: (newValue) {
@@ -384,7 +384,7 @@ class _OpenServiceState extends State<OpenService> {
                 ),
                 // ElevatedButton(
                 //     onPressed: () {
-                //       filterWorkOrdersByLocation("Бакай-Ата Чуй");
+                //       // print();
                 //     },
                 //     child: Text("dfsa")),
                 Expanded(
@@ -493,6 +493,7 @@ class _OpenServiceState extends State<OpenService> {
                           },
                         ),
                 ),
+               
               ],
             ),
     );

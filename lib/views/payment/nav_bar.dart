@@ -91,7 +91,7 @@ class NavBarState extends State<NavBar> {
                 ),
               ),
             ),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.blue,
               image: DecorationImage(
                   fit: BoxFit.fill,
@@ -100,14 +100,14 @@ class NavBarState extends State<NavBar> {
             ),
           ),
           ListTile(
-            leading: Icon(Icons.money),
-            title: Text('Пополнить лицевой счет'),
+            leading: const Icon(Icons.money),
+            title: const Text('Пополнить лицевой счет'),
             onTap: () {
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (_) => PrePayPage()));
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => const PrePayPage()));
             },
           ),
-          Divider(),
+          const Divider(),
           ListTile(
             leading: Icon(Icons.history),
             title: Text('История платежей'),

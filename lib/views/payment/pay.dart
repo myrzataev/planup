@@ -192,7 +192,7 @@
 //                                          const NavBar()));
 //                             },
 //                           );
-                          
+
 //                         }
 //                       } else {
 //                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -233,8 +233,6 @@
 //   }
 // }
 
-
-
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
@@ -244,11 +242,15 @@ import 'package:quickalert/quickalert.dart';
 import 'nav_bar.dart';
 
 class Pay extends StatefulWidget {
-  Pay({
-    Key? key,
-    required this.fio,
-    required this.licevoi,
-  }) : super(key: key);
+  final String type;
+  final bool hasComment;
+  Pay(
+      {Key? key,
+      required this.fio,
+      required this.licevoi,
+      required this.hasComment,
+      required this.type})
+      : super(key: key);
 
   final String licevoi;
   final String fio;
@@ -260,6 +262,9 @@ class Pay extends StatefulWidget {
 class _PayState extends State<Pay> {
   bool isLoading = false;
   TextEditingController moneyController = TextEditingController();
+  TextEditingController commentController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  final now = DateTime.now();
 
   // ignore: non_constant_identifier_names
   @override
@@ -268,13 +273,13 @@ class _PayState extends State<Pay> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Text("Оплата Скайнет"),
+        title: const Text("Оплата Скайнет"),
         leading: GestureDetector(
           onTap: () {
             Navigator.of(context).pushReplacement(new MaterialPageRoute(
-                builder: (BuildContext context) => NavBar()));
+                builder: (BuildContext context) => const NavBar()));
           },
-          child: Icon(
+          child: const Icon(
             Icons.home_filled, // add custom icons also
           ),
         ),
@@ -286,8 +291,7 @@ class _PayState extends State<Pay> {
               padding: const EdgeInsets.only(top: 60.0),
               child: Center(
                 child: Container(
-                    width: 200,
-                    child: Image.asset('asset/images/logo.png')),
+                    width: 200, child: Image.asset('asset/images/logo.png')),
               ),
             ),
             Padding(
@@ -299,21 +303,21 @@ class _PayState extends State<Pay> {
               ),
             ),
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 15),
+              padding: const EdgeInsets.symmetric(horizontal: 15),
               width: 800,
               child: Text(
                 'Лицевой счет: ${widget.licevoi}',
                 textAlign: TextAlign.left,
-                style: TextStyle(fontSize: 25, color: Colors.black),
+                style: const TextStyle(fontSize: 25, color: Colors.black),
               ),
             ),
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 15),
+              padding: const EdgeInsets.symmetric(horizontal: 15),
               width: 800,
               child: Text(
                 'Ф.И.О: ${widget.fio}',
                 textAlign: TextAlign.left,
-                style: TextStyle(fontSize: 25, color: Colors.black),
+                style: const TextStyle(fontSize: 25, color: Colors.black),
               ),
             ),
             Padding(
@@ -325,36 +329,55 @@ class _PayState extends State<Pay> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 15),
+              padding: const EdgeInsets.symmetric(horizontal: 15),
               child: TextField(
                 controller: moneyController,
-                style: TextStyle(color: Colors.black),
+                style: const TextStyle(color: Colors.black),
                 decoration: InputDecoration(
                     fillColor: Colors.grey[800],
-                    hintStyle: TextStyle(color: Colors.grey),
-                    labelStyle: TextStyle(color: Colors.blue),
-                    enabledBorder: OutlineInputBorder(
+                    hintStyle: const TextStyle(color: Colors.grey),
+                    labelStyle: const TextStyle(color: Colors.blue),
+                    enabledBorder: const OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.blue),
                     ),
-                    focusedBorder: OutlineInputBorder(
+                    focusedBorder: const OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.black),
                     ),
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                     labelText: 'Сумма',
                     hintText: 'Введите сумму'),
                 keyboardType: TextInputType.number,
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(top: 10.0),
-              child: Center(
-                child: Container(
-                  height: 5,
-                ),
-              ),
+            const SizedBox(
+              height: 15,
             ),
+            widget.hasComment
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    child: Form(
+                      key: _formKey,
+                      child: SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.9,
+                          child: TextFormField(
+                            controller: commentController,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Пожалуйста перечислите оборудования';
+                              }
+                              return null;
+                            },
+                            maxLines: 10,
+                            decoration: InputDecoration(
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10)),
+                                labelText: 'Комментарий',
+                                hintText: 'Перечислите оборудование'),
+                          )),
+                    ))
+                : const SizedBox(),
             isLoading
-                ? CircularProgressIndicator() // Show loading indicator when isLoading is true
+                ? const CircularProgressIndicator() // Show loading indicator when isLoading is true
                 : Container(
                     height: 50,
                     width: 250,
@@ -363,78 +386,207 @@ class _PayState extends State<Pay> {
                         borderRadius: BorderRadius.circular(20)),
                     child: TextButton(
                       onPressed: () {
-                        void chek_pay(String money, String ls) async {
-                          SharedPreferences prefs =
-                              await SharedPreferences.getInstance();
-                          String login = prefs.getString('login') ?? "null";
+                        if (widget.hasComment) {
+                          if (_formKey.currentState!.validate()) {
+                            if (isBetweenProhibitedTime(now)) {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Оплата запрещена'),
+                                  content: const Text(
+                                      'Платежи не принимаются с 23:58 до 00:01. Пожалуйста, повторите попытку позже.'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('OK'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              return;
+                            } else {
+                              void chek_pay(String money, String ls) async {
+                                SharedPreferences prefs =
+                                    await SharedPreferences.getInstance();
+                                String login =
+                                    prefs.getString('login') ?? "null";
 
-                          try {
-                            setState(() {
-                              isLoading = true;
-                            });
+                                try {
+                                  setState(() {
+                                    isLoading = true;
+                                  });
 
-                            Response response = await post(
-                                Uri.parse('http://91.210.169.237/account/abon_pay/'),
-                                body: {
-                                  'ls': ls,
-                                  'login': login,
-                                  'money': money,
+                                  Response response = await post(
+                                      Uri.parse(
+                                          'http://91.210.169.237/account/abon_pay/'),
+                                      body: {
+                                        'ls': ls,
+                                        'login': login,
+                                        'money': money,
+                                        "service_type": widget.type,
+                                        "comment": commentController.text
+                                      });
+                                  // print(response.statusCode);
+                                  if (response.statusCode == 200) {
+                                    var data = jsonDecode(
+                                        utf8.decode(response.bodyBytes));
+
+                                    var status = data['status'];
+
+                                    if (status == '0') {
+                                      Navigator.of(context).pushReplacement(
+                                          new MaterialPageRoute(
+                                              builder: (BuildContext context) =>
+                                                  const NavBar()));
+
+                                      QuickAlert.show(
+                                        context: context,
+                                        type: QuickAlertType.success,
+                                        titleColor: Colors.blue,
+                                        confirmBtnText: 'Ок',
+                                        title: 'Платеж успешно проведен',
+                                        confirmBtnColor: Colors.black,
+                                      );
+                                    } else {
+                                      QuickAlert.show(
+                                        context: context,
+                                        type: QuickAlertType.error,
+                                        confirmBtnText: 'ОК',
+                                        title: 'Сумма должна быть больше 0',
+                                        onCancelBtnTap: () {
+                                          Navigator.of(context).pushReplacement(
+                                              MaterialPageRoute(
+                                                  builder:
+                                                      (BuildContext context) =>
+                                                          const NavBar()));
+                                        },
+                                      );
+                                    }
+                                  } else {
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(const SnackBar(
+                                      duration: Duration(seconds: 5),
+                                      content: Text("Неверный формат данных"),
+                                    ));
+                                  }
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(const SnackBar(
+                                    duration: Duration(seconds: 5),
+                                    content: Text(
+                                        "У вас недостаточно средств для оплаты или отсутствует доступ к оплате"),
+                                  ));
+                                } finally {
+                                  setState(() {
+                                    isLoading = false;
+                                  });
+                                }
+                              }
+
+                              chek_pay(moneyController.text.toString(),
+                                  widget.licevoi);
+                            }
+                          }
+                        } else {
+                          if (isBetweenProhibitedTime(now)) {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Оплата запрещена'),
+                                content: const Text(
+                                    'Платежи не принимаются с 23:58 до 00:01. Пожалуйста, повторите попытку позже'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('OK'),
+                                  ),
+                                ],
+                              ),
+                            );
+                            return;
+                          } else {
+                            void chek_pay(String money, String ls) async {
+                              SharedPreferences prefs =
+                                  await SharedPreferences.getInstance();
+                              String login = prefs.getString('login') ?? "null";
+
+                              try {
+                                setState(() {
+                                  isLoading = true;
                                 });
-                            print(response.statusCode);
-                            if (response.statusCode == 200) {
-                              var data = jsonDecode(utf8.decode(response.bodyBytes));
 
-                              var status = data['status'];
+                                Response response = await post(
+                                    Uri.parse(
+                                        'http://91.210.169.237/account/abon_pay/'),
+                                    body: {
+                                      'ls': ls,
+                                      'login': login,
+                                      'money': money,
+                                      "service_type": widget.type
+                                    });
+                                // print(response.statusCode);
+                                if (response.statusCode == 200) {
+                                  var data = jsonDecode(
+                                      utf8.decode(response.bodyBytes));
 
-                              if (status == '0') {
-                                Navigator.of(context).pushReplacement(
-                                    new MaterialPageRoute(
-                                        builder: (BuildContext context) => NavBar()));
+                                  var status = data['status'];
 
-                                QuickAlert.show(
-                                  context: context,
-                                  type: QuickAlertType.success,
-                                  titleColor: Colors.blue,
-                                  confirmBtnText: 'Ок',
-                                  title: 'Платеж успешно проведен',
-                                  confirmBtnColor: Colors.black,
-                                );
-                              } else {
-                                QuickAlert.show(
-                                  context: context,
-                                  type: QuickAlertType.error,
-                                  confirmBtnText: 'ОК',
-                                  title: 'Сумма должна быть больше 0',
-                                  onCancelBtnTap: () {
+                                  if (status == '0') {
                                     Navigator.of(context).pushReplacement(
-                                        MaterialPageRoute(
+                                        new MaterialPageRoute(
                                             builder: (BuildContext context) =>
                                                 const NavBar()));
-                                  },
-                                );
+
+                                    QuickAlert.show(
+                                      context: context,
+                                      type: QuickAlertType.success,
+                                      titleColor: Colors.blue,
+                                      confirmBtnText: 'Ок',
+                                      title: 'Платеж успешно проведен',
+                                      confirmBtnColor: Colors.black,
+                                    );
+                                  } else {
+                                    QuickAlert.show(
+                                      context: context,
+                                      type: QuickAlertType.error,
+                                      confirmBtnText: 'ОК',
+                                      title: 'Сумма должна быть больше 0',
+                                      onCancelBtnTap: () {
+                                        Navigator.of(context).pushReplacement(
+                                            MaterialPageRoute(
+                                                builder:
+                                                    (BuildContext context) =>
+                                                        const NavBar()));
+                                      },
+                                    );
+                                  }
+                                } else {
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(const SnackBar(
+                                    duration: Duration(seconds: 5),
+                                    content: Text("Неверный формат данных"),
+                                  ));
+                                }
+                              } catch (e) {
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(const SnackBar(
+                                  duration: Duration(seconds: 5),
+                                  content: Text(
+                                      "У вас недостаточно средств для оплаты или отсутствует доступ к оплате"),
+                                ));
+                              } finally {
+                                setState(() {
+                                  isLoading = false;
+                                });
                               }
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                duration: Duration(seconds: 5),
-                                content: Text("Неверный формат данных"),
-                              ));
                             }
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              duration: Duration(seconds: 5),
-                              content: Text(
-                                  "У вас недостаточно средств для оплаты или отсутствует доступ к оплате"),
-                            ));
-                          } finally {
-                            setState(() {
-                              isLoading = false;
-                            });
+
+                            chek_pay(moneyController.text.toString(),
+                                widget.licevoi);
                           }
                         }
-
-                        chek_pay(moneyController.text.toString(), widget.licevoi);
                       },
-                      child: Text(
+                      child: const Text(
                         'Оплатить',
                         style: TextStyle(color: Colors.white, fontSize: 25),
                       ),
@@ -444,5 +596,18 @@ class _PayState extends State<Pay> {
         ),
       ),
     );
+  }
+
+  bool isBetweenProhibitedTime(DateTime currentTime) {
+    final prohibitedStartTime = TimeOfDay(hour: 23, minute: 58);
+    final prohibitedEndTime = TimeOfDay(hour: 0, minute: 1);
+
+    // Check if current time is within the prohibited range.
+    return prohibitedStartTime.hour <= currentTime.hour &&
+            currentTime.hour < prohibitedEndTime.hour ||
+        (currentTime.hour == prohibitedStartTime.hour &&
+            currentTime.minute >= prohibitedStartTime.minute) ||
+        (currentTime.hour == prohibitedEndTime.hour &&
+            currentTime.minute < prohibitedEndTime.minute);
   }
 }

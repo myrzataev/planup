@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
+import 'package:planup/views/payment/choose_payment.dart';
 import 'package:planup/views/payment/pay.dart';
 import 'nav_bar.dart';
 
@@ -31,14 +32,20 @@ class _PrePayPageState extends State<PrePayPage> {
         if (status == '0') {
           print(ls);
           print(fio);
-
           Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (_) => Pay(
+                  builder: (context) => ChoosePaymentScreen(
                         licevoi: lsController.text,
                         fio: fio,
                       )));
+          // Navigator.push(
+          //     context,
+          //     MaterialPageRoute(
+          //         builder: (_) => Pay(
+          //               licevoi: lsController.text,
+          //               fio: fio,
+          //             )));
         } else {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             duration: Duration(seconds: 5),
