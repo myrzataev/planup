@@ -259,11 +259,21 @@ class _OpenServiceState extends State<OpenService> {
         workOrders = List.from(allWorkOrders);
       } else {
         workOrders = allWorkOrders
-            .where((workOrder) => workOrder.dynamicFields['work_fields']
-                    ["Лицевой счет"]["Лицевой счет"]["UF_CRM_1673255771"]
-                .toString()
-                .contains(searchQuery))
+            .where((workOrder) =>
+                workOrder.dynamicFields['work_fields']?["Лицевой счет"]
+                        ?["Лицевой счет"]?["UF_CRM_1673255771"]
+                    ?.toString()
+                    ?.contains(searchQuery) ??
+                false)
             .toList();
+
+        workOrders.addAll(allWorkOrders.where((address) =>
+            address.dynamicFields['work_fields']?['Адрес']?['Адрес']
+                    ?['UF_CRM_1674993837284']
+                ?.toString()
+                ?.toLowerCase()
+                ?.contains(searchQuery.toLowerCase()) ??
+            false));
       }
     });
   }
@@ -342,9 +352,9 @@ class _OpenServiceState extends State<OpenService> {
                       horizontal: MediaQuery.of(context).size.width * 0.06,
                       vertical: 3),
                   child: SizedBox(
+                    // height: 40,
                     width: MediaQuery.of(context).size.width * 0.85,
                     child: TextField(
-                      keyboardType: TextInputType.number,
                       onChanged: (value) {
                         setState(() {
                           filterWorkOrdersByLs(value);
@@ -357,7 +367,7 @@ class _OpenServiceState extends State<OpenService> {
                         });
                       },
                       decoration: InputDecoration(
-                          hintText: "Поиск по лицевому счету",
+                          hintText: "Поиск по лицевому счету/адресу",
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                           )),
@@ -474,12 +484,16 @@ class _OpenServiceState extends State<OpenService> {
                                               'Дата  приезда: $trimmedDateString\n'),
                                       TextSpan(
                                           text: 'Лицевой счет: ${lsNumber}',
-                                          style:
-                                              TextStyle(color: Colors.green)),
+                                          style: const TextStyle(
+                                              color: Colors.green)),
                                     ],
                                   ),
                                 ),
-                                onTap: () {
+                                onTap: (){
+                                  // final user_id =
+                                  //     await storage.read(key: 'user_id');
+
+                                  // print(user_id);
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -493,7 +507,6 @@ class _OpenServiceState extends State<OpenService> {
                           },
                         ),
                 ),
-               
               ],
             ),
     );

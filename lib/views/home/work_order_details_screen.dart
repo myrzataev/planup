@@ -19,11 +19,14 @@ import 'myservice.dart';
 class WorkOrderDetailsScreen extends StatefulWidget {
   final WorkOrder workOrder;
   final String location;
+  final String transferAddress;
   bool isTransering;
-  WorkOrderDetailsScreen(
-      {required this.workOrder,
-      required this.location,
-      this.isTransering = false});
+  WorkOrderDetailsScreen({
+    required this.workOrder,
+    required this.location,
+    required this.transferAddress,
+    this.isTransering = false,
+  });
 
   @override
   _WorkOrderDetailsScreenState createState() => _WorkOrderDetailsScreenState();
@@ -182,11 +185,11 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
                     selectedValues[sendKey] = 'default';
                   } else {
                     // Обработка, если декодированное значение не является списком
-                    print("Декодированное значение не является списком");
+                    // print("Декодированное значение не является списком");
                   }
                 } catch (e) {
                   // Обработка ошибки десериализации
-                  print("Ошибка при десериализации JSON: $e");
+                  // print("Ошибка при десериализации JSON: $e");
                   reportControllers[sendKey] =
                       TextEditingController(text: value);
                 }
@@ -240,6 +243,7 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
         (widget.workOrder.dynamicFields['work_fields'] as Map<String, dynamic>)
             .entries
             .where((entry) =>
+                !entry.key.contains('Резолюция') &&
                 !entry.key.contains('Отчет') &&
                 !entry.key.contains('Желаемая дата  приезда') &&
                 !entry.key.contains('enumeration') &&
@@ -342,7 +346,7 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
           final timePart = dateTimeParts[1].substring(0, 5);
 
           return ListTile(
-            leading: Icon(Icons.calendar_today), // Иконка календаря
+            leading: const Icon(Icons.calendar_today), // Иконка календаря
             title: Text(cleanedKey),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -391,7 +395,8 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
               ? ListTile(
                   leading: Icon(Icons.location_on), // Иконка местоположения
                   title: Text(cleanedKey),
-                  subtitle: Text(widget.location),
+                  subtitle:
+                      Text("${widget.location}, ${widget.transferAddress}"),
                 )
               : ListTile(
                   leading: Icon(Icons.location_on), // Иконка местоположения
@@ -1062,12 +1067,15 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     Container(
+
                       padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: statusColor,
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         '$statusInfo  №${widget.workOrder.dynamicFields['id']} ',
                         style: TextStyle(
                           color: Colors.white,
@@ -1130,7 +1138,7 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
                       );
                     }
                   },
-                  child: Text('Подключить абонента'),
+                  child: Text('Подключить'),
                 ),
             ],
           ),

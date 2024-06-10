@@ -5,9 +5,12 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:permission_handler/permission_handler.dart';
+import 'package:planup/news/presentation/screens/news_list_screen.dart';
+import 'package:planup/study/presentation/screens/video_list_screen.dart';
+import 'package:planup/study/presentation/screens/videoplayer_screen.dart';
+import 'package:planup/news/presentation/screens/news_page.dart';
 import 'package:planup/views/home/webview_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -528,7 +531,7 @@ class _HomeViewState extends State<HomeView> {
                                         height: 30.0,
                                       ),
                                     ),
-                                  const  Column(
+                                    const Column(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       crossAxisAlignment:
@@ -748,6 +751,180 @@ class _HomeViewState extends State<HomeView> {
                           ),
                         ]),
                   ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Container(
+                            height: 100.0,
+                            margin: const EdgeInsets.all(0.0),
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const NewsListScreen()));
+                                //  context.goNamed("createservice");
+                              },
+                              style: ElevatedButton.styleFrom(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(80.0),
+                                ),
+                                padding: const EdgeInsets.all(0.0),
+                              ),
+                              child: Ink(
+                                decoration: ShapeDecoration(
+                                  color: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    side: const BorderSide(
+                                        width: 1, color: Color(0xFFFD4417)),
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                ),
+                                child: Container(
+                                  constraints: const BoxConstraints(
+                                      maxWidth: 150.0, minHeight: 80.0),
+                                  alignment: Alignment.center,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(top: 10),
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.all(2.0),
+                                          child: Image.asset(
+                                            'asset/images/news.gif', // Укажите путь к вашему изображению
+                                            width: 30.0,
+                                            height: 30.0,
+                                          ),
+                                        ),
+                                        const Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              "Новости",
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                  fontSize: 14.0,
+                                                  color: Colors.black,
+                                                  fontFamily: 'Gotham'),
+                                              textScaler: TextScaler.noScaling,
+                                            ),
+                                            Text.rich(
+                                              TextSpan(
+                                                children: [
+                                                  TextSpan(
+                                                    text: '',
+                                                    style: TextStyle(
+                                                      fontSize: 10,
+                                                      color: Colors.black45,
+                                                      fontFamily: 'Gotham',
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          Container(
+                            height: 100.0,
+                            margin: const EdgeInsets.all(0.0),
+                            child: ElevatedButton(
+                              onPressed: () {
+                                // GoRouter.of(context).pushNamed("video");
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const VideoListScreen()));
+                              },
+                              style: ElevatedButton.styleFrom(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(80.0),
+                                ),
+                                padding: const EdgeInsets.all(0.0),
+                              ),
+                              child: Ink(
+                                decoration: ShapeDecoration(
+                                  color: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    side: const BorderSide(
+                                        width: 1, color: Color(0xFFFD4417)),
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                ),
+                                child: Container(
+                                  constraints: const BoxConstraints(
+                                      maxWidth: 150.0, minHeight: 80.0),
+                                  alignment: Alignment.center,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.all(2.0),
+                                        child: Image.asset(
+                                          'asset/images/play.gif', // Укажите путь к вашему изображению
+                                          width: 30.0,
+                                          height: 30.0,
+                                        ),
+                                      ),
+                                      const Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            "Обучение",
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                                fontSize: 14.0,
+                                                color: Colors.black,
+                                                fontFamily: 'Gotham'),
+                                            textScaler: TextScaler.noScaling,
+                                          ),
+                                          // Text.rich(
+                                          //   TextSpan(
+                                          //     children: [
+                                          //       TextSpan(
+                                          //         text: 'Список неактивок',
+                                          //         style: TextStyle(
+                                          //           fontSize: 10,
+                                          //           color: Colors.black45,
+                                          //           fontFamily: 'Gotham',
+                                          //         ),
+                                          //       ),
+                                          //     ],
+                                          //   ),
+                                          //   textAlign: TextAlign.center,
+                                          // ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ]),
+                  ),
                   // ElevatedButton(onPressed: ()async {
                   //   FlutterSecureStorage storage = const FlutterSecureStorage();
 
@@ -765,8 +942,6 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 }
-
-
 
 class NotificationPermissionWidget extends StatelessWidget {
   @override

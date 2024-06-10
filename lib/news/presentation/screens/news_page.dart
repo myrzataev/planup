@@ -4,10 +4,12 @@ class NewsScreen extends StatelessWidget {
   final String newsTitle;
   final String image;
   final String newsText;
+  final String time;
   const NewsScreen(
       {super.key,
       required this.newsTitle,
       required this.image,
+      required this.time,
       required this.newsText});
 
   @override
@@ -51,11 +53,18 @@ class NewsScreen extends StatelessWidget {
                   ),
             Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Text(newsTitle,
+                child: Text(newsText,
                     style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                         color:  Color(0xff808080)))),
+                        Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Text(time,
+                    style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color:  Colors.black))),
           ],
         ));
   }

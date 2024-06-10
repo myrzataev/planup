@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:planup/news/data/models/news_list_model.dart';
 import 'package:planup/page3.dart';
+import 'package:planup/study/data/models/video_model.dart';
+import 'package:planup/study/presentation/screens/videoplayer_screen.dart';
+import 'package:planup/news/presentation/screens/news_page.dart';
 import 'package:planup/views/home/openservice.dart';
 import 'package:planup/views/payment/main.dart';
+import 'package:pod_player/pod_player.dart';
 
 import '../login_screen.dart';
 import '../views/home/client_info.dart';
@@ -33,6 +38,8 @@ class AppNavigation {
       GlobalKey<NavigatorState>(debugLabel: 'shellNews');
   static final _shellNavigatorAdd =
       GlobalKey<NavigatorState>(debugLabel: 'shellAdd');
+  static final _videoPlayerNavKey =
+      GlobalKey<NavigatorState>(debugLabel: 'newsKey');
 
   // GoRouter configuration
   static final GoRouter router = GoRouter(
@@ -223,7 +230,31 @@ class AppNavigation {
         builder: (context, state) => Update(
           key: state.pageKey,
         ),
-      )
+      ),
+      GoRoute(
+          parentNavigatorKey: _rootNavigatorKey,
+          path: '/video',
+          name: 'video',
+          builder: (context, state) {
+            return VideoPlayerScreen(
+              time: state.uri.queryParameters['time'] ?? "",
+              titleOfCourse: state.uri.queryParameters['title'] ?? "",
+              videoLink: state.uri.queryParameters['link'] ?? "",
+              description: state.uri.queryParameters['description'] ?? "",
+            );
+          }),
+      GoRoute(
+          parentNavigatorKey: _rootNavigatorKey,
+          path: '/news',
+          name: 'news',
+          builder: (context, state) {
+            return NewsScreen(
+              time: state.uri.queryParameters['time'] ?? "",
+              newsText: state.uri.queryParameters['description'] ?? "",
+              image: state.uri.queryParameters['image'] ?? "",
+              newsTitle: state.uri.queryParameters['title'] ?? "",
+            );
+          }),
     ],
   );
 }

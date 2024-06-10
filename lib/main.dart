@@ -1,8 +1,16 @@
 import 'dart:convert';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:package_info/package_info.dart';
+import 'package:planup/core/network/diosettings.dart';
+import 'package:planup/news/data/datasource/news_list_ds.dart';
+import 'package:planup/news/data/repository/news_list_model.dart';
+import 'package:planup/news/presentation/blocs/bloc/news_list_bloc.dart';
+import 'package:planup/study/data/datasource/video_list_ds.dart';
+import 'package:planup/study/data/repository/video_list_repoimpl.dart';
+import 'package:planup/study/presentation/blocs/bloc/video_list_bloc.dart';
 import 'package:planup/views/start.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
@@ -77,49 +85,78 @@ void setupFirebaseMessagingListeners() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.dark, // Установка тёмной темы
-      darkTheme: ThemeData.dark(), // Использование встроенной тёмной темы
-
-      title: 'PlanUp',
-
-      localizationsDelegates: [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        // Add other localization delegates you need
+    return MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider(create: (context) => DioSettings()),
+        RepositoryProvider(
+            create: (context) => VideoListDataSource(
+                dio: RepositoryProvider.of<DioSettings>(context).dio)),
+        RepositoryProvider(
+            create: (context) => VideoListRepoimpl(
+                dataSource:
+                    RepositoryProvider.of<VideoListDataSource>(context))),
+        RepositoryProvider(
+            create: (context) => NewsListDataSource(
+                dio: RepositoryProvider.of<DioSettings>(context).dio)),
+        RepositoryProvider(
+            create: (context) => NewsListRepoImpl(
+                dataSource: RepositoryProvider.of<NewsListDataSource>(context)))
       ],
-      supportedLocales: [
-        const Locale('en', ''), // English
-        const Locale('es', ''), // Spanish
-        // Add other locales your app supports
-      ],
-      home: FutureBuilder(
-        future: _tryAutoLogin(),
-        builder: (context, snapshot) {
-          // Check if the future is complete
-          if (snapshot.connectionState == ConnectionState.done) {
-            // If we have data, it means auto login was successful
-            if (snapshot.hasData && snapshot.data == true) {
-              return Start();
-            } else {
-              return LoginScreen();
-              // return Start();
-            }
-          }
-          // While we're waiting, show a progress indicator
-          return Scaffold(
-            backgroundColor: Color.fromRGBO(25, 11, 54, 1.0),
-            body: Center(
-              child: Image.asset(
-                'asset/images/splash.png', // Путь к вашей картинке в assets
-                width: 200, // Установите размеры картинки по вашему усмотрению
-                height: 200,
-              ),
-            ),
-          );
-        },
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+              create: (context) => VideoListBloc(
+                  repoimpl: RepositoryProvider.of<VideoListRepoimpl>(context))),
+          BlocProvider(
+              create: (context) => NewsListBloc(
+                  repoImpl: RepositoryProvider.of<NewsListRepoImpl>(context)))
+        ],
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          themeMode: ThemeMode.dark, // Установка тёмной темы
+          darkTheme: ThemeData.dark(), // Использование встроенной тёмной темы
+
+          title: 'PlanUp',
+
+          localizationsDelegates: [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+            // Add other localization delegates you need
+          ],
+          supportedLocales: [
+            const Locale('en', ''), // English
+            const Locale('es', ''), // Spanish
+            // Add other locales your app supports
+          ],
+          home: FutureBuilder(
+            future: _tryAutoLogin(),
+            builder: (context, snapshot) {
+              // Check if the future is complete
+              if (snapshot.connectionState == ConnectionState.done) {
+                // If we have data, it means auto login was successful
+                if (snapshot.hasData && snapshot.data == true) {
+                  return Start();
+                } else {
+                  return LoginScreen();
+                  // return Start();
+                }
+              }
+              // While we're waiting, show a progress indicator
+              return Scaffold(
+                backgroundColor: Color.fromRGBO(25, 11, 54, 1.0),
+                body: Center(
+                  child: Image.asset(
+                    'asset/images/splash.png', // Путь к вашей картинке в assets
+                    width:
+                        200, // Установите размеры картинки по вашему усмотрению
+                    height: 200,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
       ),
     );
   }
@@ -147,7 +184,7 @@ class MyApp extends StatelessWidget {
           if (response.statusCode == 200) {
             var responseData = await json.decode(response.body);
             int? squares_id = responseData["squares_id"];
-            preferences.setInt("squares_id", squares_id??0);
+            preferences.setInt("squares_id", squares_id ?? 0);
             PackageInfo packageInfo = await PackageInfo.fromPlatform();
             final storage = FlutterSecureStorage();
             final version = packageInfo.version;

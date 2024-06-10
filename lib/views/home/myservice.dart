@@ -29,6 +29,9 @@ class _OutfitScreenState extends State<OutfitScreen> {
   List<dynamic> listOfUniqueLocations = [];
   Map<String, dynamic> jsonMap = {};
   List<dynamic> listOfRegions = [];
+  Map<String, dynamic>? rrrr;
+  // var workFields;
+
   @override
   void initState() {
     super.initState();
@@ -55,6 +58,30 @@ class _OutfitScreenState extends State<OutfitScreen> {
   //     listOfLsNumbersCopy = List.from(results);
   //   });
   // }
+  void filterWorkOrdersByLs(String? searchQuery) {
+    setState(() {
+      if (searchQuery == null || searchQuery.isEmpty) {
+        workOrders = List.from(allWorkOrders);
+      } else {
+        workOrders = allWorkOrders
+            .where((workOrder) =>
+                workOrder.dynamicFields['work_fields']?["Лицевой счет"]
+                        ?["Лицевой счет"]?["UF_CRM_1673255771"]
+                    ?.toString()
+                    ?.contains(searchQuery) ??
+                false)
+            .toList();
+
+        workOrders.addAll(allWorkOrders.where((address) =>
+            address.dynamicFields['work_fields']?['Адрес']?['Адрес']
+                    ?['UF_CRM_1674993837284']
+                ?.toString()
+                ?.toLowerCase()
+                ?.contains(searchQuery.toLowerCase()) ??
+            false));
+      }
+    });
+  }
 
   void searchByLs(String query) {
     var suggestions = [];
@@ -116,7 +143,8 @@ class _OutfitScreenState extends State<OutfitScreen> {
       final body = {'user_id': '$username'};
 
       final response = await http.post(uri, headers: headers, body: body);
-      print(response.statusCode);
+
+      // print(response.statusCode);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
 
@@ -136,47 +164,39 @@ class _OutfitScreenState extends State<OutfitScreen> {
         final List<dynamic> works = data['works'];
         // final List<dynamic> worksTest = data['works'][0]["work_fields"];
 
-        listOfRegions = works
-            .where((element) =>
-                element["type_deal"] ==
-                "Перенос подкл") // Filter works by type_deal
-            .map((element) {
-              final workFields =
-                  element["work_fields"] as Map<String, dynamic>?;
+        listOfRegions = works.map<String?>((element) {
+          if (element["type_deal"] != "Перенос подкл") {
+            return null; // Return null if type_deal is not "Перенос подкл"
+          }
 
-              // Ensure workFields is not null
-              if (workFields == null) return [];
+          final workFields = element["work_fields"] as Map<String, dynamic>?;
+          if (workFields == null) {
+            return null; // Return null if workFields is null
+          }
 
-              // Filter fields that contain "Локация" and are not "Не выбрано"
-              return workFields.entries
-                  .where((e) => e.key.toLowerCase().contains("локация"))
-                  .where((e) {
-                    final nestedMap = e.value as Map<String, dynamic>?;
-                    if (nestedMap == null) return false;
+          for (var entry in workFields.entries) {
+            if (entry.key.toLowerCase().contains("локация")) {
+              final nestedMap = entry.value as Map<String, dynamic>?;
+              if (nestedMap != null) {
+                for (var nestedEntry in nestedMap.entries) {
+                  if (nestedEntry.value is Map<String, dynamic>) {
+                    final deepNestedMap =
+                        nestedEntry.value as Map<String, dynamic>;
+                    for (var deepNestedEntry in deepNestedMap.entries) {
+                      if (deepNestedEntry.value != "Не выбрано") {
+                        return deepNestedEntry.value.toString();
+                      }
+                    }
+                  } else if (nestedEntry.value != "Не выбрано") {
+                    return nestedEntry.value.toString();
+                  }
+                }
+              }
+            }
+          }
 
-                    final firstNestedValue =
-                        nestedMap.values.first as Map<String, dynamic>?;
-                    if (firstNestedValue == null) return false;
-
-                    final value = firstNestedValue.values.first;
-                    return value != "Не выбрано";
-                  })
-                  .map((e) {
-                    final nestedMap = e.value as Map<String, dynamic>?;
-                    if (nestedMap == null) return '';
-
-                    final firstNestedValue =
-                        nestedMap.values.first as Map<String, dynamic>?;
-                    if (firstNestedValue == null) return '';
-
-                    return firstNestedValue.values.first.toString();
-                  })
-                  .where((value) =>
-                      value.isNotEmpty) // Filter out any empty values
-                  .toList();
-            })
-            .expand((x) => x) // Flatten the list of lists
-            .toList();
+          return null; // Return null if no valid region is found
+        }).toList();
 
         lsList = works.map(
           (e) {
@@ -534,17 +554,19 @@ class _OutfitScreenState extends State<OutfitScreen> {
                 width: MediaQuery.of(context).size.width * 0.85,
                 child: TextField(
                   onChanged: (value) {
-                    searchByLs(value);
                     setState(() {
-                      if (value.isEmpty) {
-                        isSearching = false;
-                      } else {
-                        isSearching = true;
-                      }
+                      filterWorkOrdersByLs(value);
                     });
+                    // setState(() {
+                    //   if (value.isEmpty) {
+                    //     isSearching = false;
+                    //   } else {
+                    //     isSearching = true;
+                    //   }
+                    // });
                   },
                   decoration: InputDecoration(
-                      hintText: "Поиск по лицевому счету",
+                      hintText: "Поиск по лицевому счету/адресу",
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       )),
@@ -559,7 +581,21 @@ class _OutfitScreenState extends State<OutfitScreen> {
                   filterWorkOrdersByLocation(newValue);
                 });
               },
-              items: ['Все', ...listOfUniqueLocations].map((location) {
+              // items: [
+              //   DropdownMenuItem<String>(
+              //     value: 'Все',
+              //     child: Text('Все'),
+              //   ),
+              //   ...listOfUniqueLocations.map((location) {
+              //     return DropdownMenuItem<String>(
+              //       value: location['VALUE'] as String,
+              //       child: Text(location['VALUE'] as String),
+              //     );
+              //   }).toList(),
+              // ],
+              items: [
+                'Все', ...listOfUniqueLocations].map((location) {
+                // print(location);
                 return DropdownMenuItem<String>(
                   value: location,
                   child: Text(
@@ -582,10 +618,10 @@ class _OutfitScreenState extends State<OutfitScreen> {
                             : const Text('Нет нарядов для выбранной даты'),
                       )
                     : ListView.builder(
-                        itemCount:
-                            isSearching ? lsListCopy.length : workOrders.length,
+                        itemCount: workOrders.length,
                         // itemCount: workOrders.length,
                         itemBuilder: (context, index) {
+                          final region = listOfRegions[index];
                           // final lsNumber = [index];
                           final workOrder = workOrders[index];
                           String extractLocation(
@@ -648,7 +684,6 @@ class _OutfitScreenState extends State<OutfitScreen> {
                           String statusMessage = statusInfo['message'];
                           Color statusColor = statusInfo['color'];
 
-                          // Извлеките информацию о резолюции, если наряд завершен
                           String resolutionId = workOrder
                                   .dynamicFields['resolution_work_id']
                                   ?.toString() ??
@@ -669,7 +704,7 @@ class _OutfitScreenState extends State<OutfitScreen> {
                                     isTransferredAddress(typeDeal)
                                         ? TextSpan(
                                             text:
-                                                "Локация: ${listOfRegions.first??""}\nАдрес переноса: $transferAddress\n")
+                                                "Локация: ${region ?? "Не указано"}\nАдрес переноса: ${transferAddress ?? "Не указано"}\n")
                                         : TextSpan(
                                             text:
                                                 'Локация: $location\nАдрес: $executor\n'),
@@ -712,8 +747,10 @@ class _OutfitScreenState extends State<OutfitScreen> {
                                   MaterialPageRoute(
                                     builder: (context) =>
                                         WorkOrderDetailsScreen(
-                                          isTransering: isTransferredAddress(typeDeal),
-                                          location: listOfRegions.first??"",
+                                            isTransering:
+                                                isTransferredAddress(typeDeal),
+                                            location: region ?? "",
+                                            transferAddress: transferAddress,
                                             workOrder: workOrder),
                                   ),
                                 );
