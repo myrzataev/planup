@@ -7,8 +7,6 @@ import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:planup/news/presentation/screens/news_list_screen.dart';
 import 'package:planup/study/presentation/screens/video_list_screen.dart';
-import 'package:planup/study/presentation/screens/videoplayer_screen.dart';
-import 'package:planup/news/presentation/screens/news_page.dart';
 import 'package:planup/views/home/webview_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -589,7 +587,7 @@ class _HomeViewState extends State<HomeView> {
                                     MaterialPageRoute(
                                         builder: (context) => WebPageScreen(
                                               urlOfWeb:
-                                                  'http://161.35.93.176/bonuses?id=$squares_id',
+                                                  'http://104.248.192.225/bonuses?id=$squares_id',
                                             )));
                                 //  context.goNamed("createservice");
                               },
@@ -678,7 +676,7 @@ class _HomeViewState extends State<HomeView> {
                                     MaterialPageRoute(
                                         builder: (context) => WebPageScreen(
                                               urlOfWeb:
-                                                  'http://161.35.93.176/bonuses/non-actives-list?id=$squares_id',
+                                                  'http://104.248.192.225/bonuses/non-actives-list?id=$squares_id',
                                             )));
                               },
                               style: ElevatedButton.styleFrom(

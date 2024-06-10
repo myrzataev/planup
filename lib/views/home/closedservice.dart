@@ -402,11 +402,16 @@ class _OutfitScreenOldState extends State<OutfitScreenOld> {
                           String location =
                               extractLocation(workOrder.dynamicFields);
                           String executor = workOrder
-                                  .dynamicFields['work_fields']?['Адрес']?['Адрес']?['UF_CRM_1674993837284'].split('|')
+                                  .dynamicFields['work_fields']?['Адрес']
+                                      ?['Адрес']?['UF_CRM_1674993837284']
+                                  .split('|')
                                   .first ??
                               'Не указано';
                           String lsNumber =
-                              workOrder.dynamicFields['work_fields']?["Лицевой счет"]?["Лицевой счет"]?["UF_CRM_1673255771"] ??"Не указано";
+                              workOrder.dynamicFields['work_fields']
+                                          ?["Лицевой счет"]?["Лицевой счет"]
+                                      ?["UF_CRM_1673255771"] ??
+                                  "Не указано";
                           String accountNumber = workOrder
                                   .dynamicFields['status_work_id']
                                   .toString() ??
