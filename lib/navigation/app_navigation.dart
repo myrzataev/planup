@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:planup/news/data/models/news_list_model.dart';
@@ -5,7 +7,21 @@ import 'package:planup/page3.dart';
 import 'package:planup/study/data/models/video_model.dart';
 import 'package:planup/study/presentation/screens/videoplayer_screen.dart';
 import 'package:planup/news/presentation/screens/news_page.dart';
+import 'package:planup/tmc/presentation/screens/all_goods_screen.dart';
+import 'package:planup/tmc/presentation/screens/categories_screen.dart';
+import 'package:planup/tmc/presentation/screens/choose_action.dart';
+import 'package:planup/tmc/presentation/screens/create_tmc_screen.dart';
+import 'package:planup/tmc/presentation/screens/detailed_info.dart';
+import 'package:planup/tmc/presentation/screens/edit_good_screen.dart';
+import 'package:planup/tmc/presentation/screens/main_menu.dart';
+import 'package:planup/tmc/presentation/screens/my_trades_screen.dart';
+import 'package:planup/tmc/presentation/screens/one_category_screen.dart';
+import 'package:planup/tmc/presentation/screens/trade_goods_screen.dart';
+import 'package:planup/tmc/presentation/screens/trade_history_list.dart';
+import 'package:planup/tmc/presentation/screens/transactions_history.dart';
+import 'package:planup/views/home/detailed_screen_from_notifcation.dart';
 import 'package:planup/views/home/openservice.dart';
+import 'package:planup/views/payment/globals.dart';
 import 'package:planup/views/payment/main.dart';
 import 'package:pod_player/pod_player.dart';
 
@@ -133,6 +149,17 @@ class AppNavigation {
                     ),
                   ),
                   GoRoute(
+                    path: "workFromNotification",
+                    name: "workFromNotification",
+                    builder: (context, state) {
+                      final String workId =
+                          state.uri.queryParameters["workId"] ?? "0";
+                      return GetopenserviceFromNotification(
+                        workId: workId,
+                      );
+                    },
+                  ),
+                  GoRoute(
                     parentNavigatorKey: _rootNavigatorKey,
                     path: 'myservices',
                     name: "myservices",
@@ -255,6 +282,133 @@ class AppNavigation {
               newsTitle: state.uri.queryParameters['title'] ?? "",
             );
           }),
+      GoRoute(
+          parentNavigatorKey: _rootNavigatorKey,
+          path: '/tmc',
+          name: 'tmc',
+          builder: (context, state) {
+            return const MainMenuScreen();
+          },
+          routes: [
+            GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
+              path: "categories",
+              name: "categories",
+              builder: (context, state) {
+                return const CategoriesScreen();
+              },
+            ),
+            GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
+              path: "createTMC",
+              name: "createTMC",
+              builder: (context, state) {
+                return const CreateTmcScreen();
+              },
+            ),
+            GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
+              path: "trade",
+              name: "trade",
+              builder: (context, state) {
+                return TradeGoodsScreen(
+                  goodID: state.uri.queryParameters["goodId"] ?? "",
+                );
+              },
+            ),
+             GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
+              path: "myTrades",
+              name: "myTrades",
+              builder: (context, state) {
+                return const MyTradesScreen(
+                  
+                );
+              },
+            ),
+            GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
+              path: "allgoods",
+              name: "allgoods",
+              builder: (context, state) {
+                return const AllGoodsScreen();
+              },
+            ),
+            GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
+              path: "oneCategory",
+              name: "oneCategory",
+              builder: (context, state) {
+                return OneCategoriesContent(
+                  urlRoute: state.uri.queryParameters['urlRoute'] ?? "",
+                );
+              },
+            ),
+            GoRoute(
+                parentNavigatorKey: _rootNavigatorKey,
+                path: "detailedInfo",
+                name: "detailedInfo",
+                builder: (context, state) {
+                  final photoPath = state.uri.queryParameters["photo"];
+                  File? photoFile;
+
+                  if (photoPath != null && photoPath.isNotEmpty) {
+                    photoFile = File(photoPath);
+                  }
+                  return DetailedInfoScreen(
+                    manufacture: state.uri.queryParameters["manufacture"] ?? "",
+                    model: state.uri.queryParameters["model"] ?? "",
+                    cost: state.uri.queryParameters["cost"] ?? "",
+                    id: state.uri.queryParameters["id"] ?? "",
+                    photo: photoFile,
+                    barcode: state.uri.queryParameters["barcode"] ?? "",
+                    category: state.uri.queryParameters["category"] ?? "",
+                    deleted: state.uri.queryParameters["deleted"] ?? "",
+                    nazvanieID: state.uri.queryParameters["nazvanieID"] ?? "",
+                    goodStatus: state.uri.queryParameters["goodStatus"] ?? "",
+                  );
+                },
+                routes: [
+                  GoRoute(
+                    parentNavigatorKey: _rootNavigatorKey,
+                    path: "history",
+                    name: "history",
+                    builder: (context, state) {
+                      return const TransactionsHistoryScreen();
+                    },
+                  ),
+                  GoRoute(
+                    parentNavigatorKey: _rootNavigatorKey,
+                    path: "editTMC",
+                    name: "editTMC",
+                    builder: (context, state) {
+                      return EditTmcScreen(
+                        id: state.uri.queryParameters["id"] ?? "",
+                        nazvanieID:
+                            state.uri.queryParameters["nazvanieID"] ?? "",
+                        deleted: state.uri.queryParameters["deleted"] ?? "",
+                      );
+                    },
+                  ),
+                ]),
+            GoRoute(
+                parentNavigatorKey: _rootNavigatorKey,
+                path: "chooseAction",
+                name: "chooseAction",
+                builder: (context, state) {
+                  return const ChooseActionScreen();
+                },
+                routes: [
+                  GoRoute(
+                    path: "tradeHistory",
+                    name: "tradeHistory",
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      return const TradeHistoryListScreen();
+                    },
+                  )
+                ]),
+          ]),
     ],
   );
 }

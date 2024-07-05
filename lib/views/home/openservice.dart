@@ -4,7 +4,6 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:async';
-import 'package:planup/views/home/work_order_details_screen.dart';
 
 import 'openserviceget.dart';
 
@@ -28,9 +27,8 @@ class _OpenServiceState extends State<OpenService> {
   bool _isLoading = false;
   List<dynamic> lsList = [];
   List<dynamic> lsListCopy = [];
-  List<dynamic> _forLocations = [];
-  List<dynamic> _forLocationsCopy = [];
-
+  String trimmedDateString = "";
+  DateTime parsedDateTime = DateTime.now().toUtc();
   @override
   void initState() {
     super.initState();
@@ -75,7 +73,7 @@ class _OpenServiceState extends State<OpenService> {
         final data = json.decode(response.body);
 
         final List<dynamic> works = data['works'];
-        _forLocations = works;
+
         setState(() {
           workOrders = works.map((work) => WorkOrder.fromJson(work)).toList();
           allWorkOrders = List.from(workOrders);
@@ -445,20 +443,35 @@ class _OpenServiceState extends State<OpenService> {
                                 'Не указано';
                             String lsNumber =
                                 workOrder.dynamicFields['work_fields']
-                                            ['Лицевой счет']['Лицевой счет']
-                                        ['UF_CRM_1673255771'] ??
+                                            ?['Лицевой счет']?['Лицевой счет']
+                                        ?['UF_CRM_1673255771'] ??
                                     'Не указано';
                             String accountNumber = workOrder
                                     .dynamicFields['status_work_id']
                                     .toString() ??
                                 '0';
-                            String desiredArrivalDateString = workOrder
-                                        .dynamicFields['work_fields']
-                                    ['Желаемая дата  приезда']
-                                ['Желаемая дата  приезда']['UF_CRM_1673255749'];
+                            String desiredArrivalDateString =
+                                workOrder.dynamicFields['work_fields']
+                                                ?['Желаемая дата  приезда']
+                                            ?['Желаемая дата  приезда']
+                                        ?['UF_CRM_1673255749'] ??
+                                    "2023-11-29T00:00:00+06:00";
                             String trimmedDateString =
                                 desiredArrivalDateString.substring(
                                     0, desiredArrivalDateString.length - 15);
+                            try {
+                              // Attempt to trim and parse the desired arrival date string
+                              trimmedDateString =
+                                  desiredArrivalDateString.substring(
+                                      0, desiredArrivalDateString.length - 15);
+                              parsedDateTime =
+                                  DateTime.parse(trimmedDateString).toUtc();
+                            } catch (e) {
+                              // Handle parsing error or null value
+                              // print("Error parsing date string: $e");
+                              // Set a default date (e.g., today's date or a specific date)
+                              parsedDateTime = DateTime.now().toUtc();
+                            }
 
                             Map<String, dynamic> statusInfo =
                                 getStatusMessage(accountNumber);
@@ -466,6 +479,7 @@ class _OpenServiceState extends State<OpenService> {
                             Color statusColor = statusInfo['color'];
 
                             return Card(
+                              color: chooseColor(date: parsedDateTime),
                               child: ListTile(
                                 title: Text(
                                     'Наряд: №${workOrder.dynamicFields['id']}   ${workOrder.dynamicFields['type_deal']}'),
@@ -478,18 +492,37 @@ class _OpenServiceState extends State<OpenService> {
                                               'Локация: $location\nАдрес: $executor\n'),
                                       TextSpan(
                                           text: 'Статус: $statusMessage\n',
-                                          style: TextStyle(color: statusColor)),
+                                          // style: TextStyle(color: statusColor)
+                                          ),
                                       TextSpan(
-                                          text:
-                                              'Дата  приезда: $trimmedDateString\n'),
+                                        children: [
+                                          const TextSpan(
+                                            text: 'Дата приезда: ',
+                                          ), // Default color
+                                          TextSpan(
+                                            text: "$trimmedDateString\n",
+                                            // style: TextStyle(
+                                            //     color: chooseColor(
+                                            //         date: parsedDateTime)),
+                                          ),
+                                        ],
+                                      ),
                                       TextSpan(
-                                          text: 'Лицевой счет: ${lsNumber}',
-                                          style: const TextStyle(
-                                              color: Colors.green)),
+                                        children: [
+                                          const TextSpan(
+                                            text: 'Лицевой счет: ',
+                                          ), // Default color
+                                          TextSpan(
+                                            text: "$lsNumber\n",
+                                            // style: const TextStyle(
+                                            //     color: Colors.green),
+                                          ),
+                                        ],
+                                      ),
                                     ],
                                   ),
                                 ),
-                                onTap: (){
+                                onTap: () {
                                   // final user_id =
                                   //     await storage.read(key: 'user_id');
 
@@ -510,6 +543,25 @@ class _OpenServiceState extends State<OpenService> {
               ],
             ),
     );
+  }
+
+  Color chooseColor({required DateTime date}) {
+    DateTime currentDateTime = DateTime.now().toLocal().toUtc();
+    Duration oneDay = const Duration(days: 1);
+    Duration tenDays = const Duration(days: 10);
+
+    Duration difference = currentDateTime.difference(date);
+
+    if (difference <= oneDay) {
+      return Colors.green; // 1-2 days
+    } else if (difference <= oneDay * 5) {
+      return Colors.amber;  // 3-5 days
+    } else if (difference <= tenDays) {
+      return Colors.orange;
+      // 6-9 days (you can choose another color here)
+    } else {
+      return Colors.red; // More than 10 days
+    }
   }
 }
 

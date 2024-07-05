@@ -88,7 +88,7 @@ class _WebPageScreenState extends State<WebPageScreen> {
 
   @override
   void dispose() {
-    unBlock();
+    unBlock();  
     super.dispose();
   }
 

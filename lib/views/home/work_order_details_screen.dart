@@ -60,7 +60,7 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
 
       if (source == null) return; // Если пользователь отменил выбор
 
-      final imageFile = await ImagePicker().getImage(source: source);
+      final imageFile = await ImagePicker().pickImage(source: source);
 
       if (imageFile == null) return; // Если пользователь не выбрал изображение
 
@@ -1130,12 +1130,19 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
                         ),
                       );
                     } else {
-                      // Если 'Лицевой счет' не найден или данные не соответствуют ожидаемому формату
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text(
-                                'Лицевой счет не найден или данные не соответствуют ожидаемому формату')),
+                        Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                             const HydraConnect(accountNumber: ""),
+                        ),
                       );
+                      // Если 'Лицевой счет' не найден или данные не соответствуют ожидаемому формату
+                      // ScaffoldMessenger.of(context).showSnackBar(
+                      //   SnackBar(
+                      //       content: Text(
+                      //           'Лицевой счет не найден или данные не соответствуют ожидаемому формату')),
+                      // );
                     }
                   },
                   child: Text('Подключить'),

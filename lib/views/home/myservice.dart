@@ -30,6 +30,8 @@ class _OutfitScreenState extends State<OutfitScreen> {
   Map<String, dynamic> jsonMap = {};
   List<dynamic> listOfRegions = [];
   Map<String, dynamic>? rrrr;
+  String trimmedDateString = "";
+  DateTime parsedDateTime = DateTime.now().toUtc();
   // var workFields;
 
   @override
@@ -344,7 +346,10 @@ class _OutfitScreenState extends State<OutfitScreen> {
     switch (statusId) {
       case '1':
         statusIcon = Icons.error_outline; // Icon for "Не начат"
-        return {'message': 'Не начат', 'color': Colors.red, 'icon': statusIcon};
+        return {'message': 'Не начат', 
+        // 'color': Colors.red, 
+        'color': Colors.black, 
+        'icon': statusIcon};
       case '2':
         statusIcon = Icons.directions_bus; // Icon for "В пути"
         return {
@@ -428,6 +433,7 @@ class _OutfitScreenState extends State<OutfitScreen> {
       case '9':
         resolutionIcon = Icons.do_not_disturb_on;
         message = 'Отказывается возвращать оборудование';
+        // color = Colors.white;
         color = Colors.redAccent;
         break;
       case '10':
@@ -593,8 +599,7 @@ class _OutfitScreenState extends State<OutfitScreen> {
               //     );
               //   }).toList(),
               // ],
-              items: [
-                'Все', ...listOfUniqueLocations].map((location) {
+              items: ['Все', ...listOfUniqueLocations].map((location) {
                 // print(location);
                 return DropdownMenuItem<String>(
                   value: location,
@@ -671,14 +676,26 @@ class _OutfitScreenState extends State<OutfitScreen> {
                                   .dynamicFields['status_work_id']
                                   .toString() ??
                               '0';
-                          String desiredArrivalDateString = workOrder
-                                      .dynamicFields['work_fields']
-                                  ['Желаемая дата  приезда']
-                              ['Желаемая дата  приезда']['UF_CRM_1673255749'];
-                          String trimmedDateString =
-                              desiredArrivalDateString.substring(
-                                  0, desiredArrivalDateString.length - 15);
-
+                          String desiredArrivalDateString =
+                              workOrder.dynamicFields['work_fields']
+                                              ?['Желаемая дата  приезда']
+                                          ['Желаемая дата  приезда']
+                                      ?['UF_CRM_1673255749'] ??
+                                  "2020-11-29T00:00:00+06:00";
+                          try {
+                            // Attempt to trim and parse the desired arrival date string
+                            trimmedDateString =
+                                desiredArrivalDateString.substring(
+                                    0, desiredArrivalDateString.length - 15);
+                            parsedDateTime =
+                                DateTime.parse(trimmedDateString).toUtc();
+                          } catch (e) {
+                            // Handle parsing error or null value
+                            // print("Error parsing date string: $e");
+                            // Set a default date (e.g., today's date or a specific date)
+                            parsedDateTime = DateTime.now().toUtc();
+                          }
+                          parsedDateTime = parsedDateTime.toUtc();
                           Map<String, dynamic> statusInfo =
                               getStatusMessage(accountNumber);
                           String statusMessage = statusInfo['message'];
@@ -694,6 +711,7 @@ class _OutfitScreenState extends State<OutfitScreen> {
                               '4'; // Предположим, что '4' это статус "Завершен"
 
                           return Card(
+                            color: chooseColor(date: parsedDateTime),
                             child: ListTile(
                               title: Text(
                                   'Наряд: №${workOrder.dynamicFields['id']}   ${workOrder.dynamicFields['type_deal']}'),
@@ -710,23 +728,36 @@ class _OutfitScreenState extends State<OutfitScreen> {
                                                 'Локация: $location\nАдрес: $executor\n'),
                                     TextSpan(
                                         text: 'Статус: $statusMessage\n',
-                                        style: TextStyle(color: statusColor)),
+                                        // style: TextStyle(color: statusColor)
+                                        ),
                                     TextSpan(
-                                      text:
-                                          'Дата  приезда: $trimmedDateString\n',
+                                      children: [
+                                        const TextSpan(
+                                          text: 'Дата приезда: ',
+                                        ), // Default color
+                                        TextSpan(
+                                          text: "$trimmedDateString\n",
+                                          // style: TextStyle(
+                                          //     color: chooseColor(
+                                          //         date: parsedDateTime)
+                                          //         ),
+                                        ),
+                                      ],
                                     ),
                                     TextSpan(
                                         text:
                                             "Лицевой счет: ${_decider(lsListCopy[index])}",
                                         // text: 'Лицевой счет:${_decider(listOfLsNumbers[index])}',
-                                        style: const TextStyle(
-                                            color: Colors.green)),
+                                        // style: const TextStyle(
+                                        //     color: Colors.green)
+                                            ),
                                     if (isCompleted) // Показать резолюцию, если наряд завершен
                                       TextSpan(
                                           text:
                                               '\nРезолюция: ${resolutionInfo['message']}',
-                                          style: TextStyle(
-                                              color: resolutionInfo['color'])),
+                                          // style: TextStyle(
+                                          //     color: resolutionInfo['color'])
+                                              ),
                                   ],
                                 ),
                               ),
@@ -780,6 +811,25 @@ class _OutfitScreenState extends State<OutfitScreen> {
       return false;
     }
   }
+
+  Color chooseColor({required DateTime date}) {
+    DateTime currentDateTime = DateTime.now().toLocal().toUtc();
+    Duration oneDay = const Duration(days: 1);
+    Duration tenDays = const Duration(days: 10);
+
+    Duration difference = currentDateTime.difference(date);
+
+    if (difference <= oneDay) {
+      return Colors.green; // 1-2 days
+    } else if (difference <= oneDay * 5) {
+    return Colors.amber;  // 3-5 days
+    } else if (difference <= tenDays) {
+       return Colors.orange;
+       // 6-9 days (you can choose another color here)
+    } else {
+      return Colors.red; // More than 10 days
+    }
+  }
   // String filter(String location){
   //   switch (location){
   //     case "Локация Ош":
@@ -806,8 +856,9 @@ class WorkOrder {
 
     // Извлечение желаемой даты приезда
     String desiredArrivalDateString = json['work_fields']
-            ['Желаемая дата  приезда']['Желаемая дата  приезда']
-        ['UF_CRM_1673255749'];
+                ?['Желаемая дата  приезда']?['Желаемая дата  приезда']
+            ?['UF_CRM_1673255749'] ??
+        "2023-11-29T00:00:00+06:00";
     DateTime desiredArrivalDate = DateTime.parse(desiredArrivalDateString);
 
     return WorkOrder(

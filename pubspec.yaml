@@ -15,7 +15,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 2.0.28
+version: 2.0.32
 
 environment:
   sdk: '>=3.1.0 <4.0.0'
@@ -50,7 +50,7 @@ dependencies:
   image_gallery_saver: '^2.0.3'
   path: ^1.8.0 # проверьте последнюю версию пакета path
   http_parser: ^4.0.0
-  image_picker: ^0.8.4
+  image_picker: ^1.1.2
   flutter_secure_storage: ^8.0.0
   flutter_easyloading: ^3.0.5
   flutter_overlay_loader: ^2.0.0
@@ -90,6 +90,13 @@ dependencies:
   uiblock: ^2.0.3
   pod_player: ^0.2.0
   youtube_player_flutter: ^9.0.1
+  flutter_local_notifications: ^17.1.2
+  flutter_barcode_scanner: ^2.0.0
+  flutter_screenutil: ^5.9.3
+  dropdown_search: ^5.0.6
+  get_it: ^7.7.0
+ 
+  # flutter_background_geolocation: ^4.15.5
   # pdf_render: ^1.4.6
 
 
@@ -146,10 +153,10 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
+  fonts:
+    - family: SanSerif
+      fonts:
+        - asset: asset/fonts/OpenSans-Medium.ttf
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
   #   - family: Trajan Pro
