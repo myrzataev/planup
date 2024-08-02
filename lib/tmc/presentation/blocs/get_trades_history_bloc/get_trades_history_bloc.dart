@@ -20,12 +20,23 @@ class GetTradesHistoryBloc
       } on DioException catch (e) {
         if (e.response?.statusCode == 403) {
           emit(GetTradesHistoryError(errorText: "У вас нет доступа"));
+        } else if (e.type == DioExceptionType.sendTimeout) {
+          emit(GetTradesHistoryError(
+              errorText: "Проверьте интернет подключение"));
+        } else if (e.type == DioExceptionType.connectionError) {
+          emit(GetTradesHistoryError(
+              errorText: "Проверьте интернет подключение"));
+        } else if (e.type == DioExceptionType.receiveTimeout) {
+          emit(GetTradesHistoryError(
+              errorText: "Проверьте интернет подключение"));
         } else {
           emit(GetTradesHistoryError(
               errorText: "Произошла ошибка: ${e.message}"));
         }
       } catch (e) {
-        emit(GetTradesHistoryError(errorText: e.toString()));
+        emit(GetTradesHistoryError(errorText: "Что то пошло не так, попробуйте снова"
+        // e.toString()
+        ));
       }
     });
   }

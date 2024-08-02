@@ -13,7 +13,6 @@ import 'package:gallery_saver/gallery_saver.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:planup/views/home/scanmac.dart';
 
-
 class HydraConnect extends StatefulWidget {
   final String accountNumber;
   const HydraConnect({Key? key, required this.accountNumber}) : super(key: key);
@@ -22,11 +21,9 @@ class HydraConnect extends StatefulWidget {
   _HydraConnectState createState() => _HydraConnectState();
 }
 
-
 class _HydraConnectState extends State<HydraConnect> {
-
-
-  List<String>? macAddresses; // Переменная состояния для хранения результатов сканирования
+  List<String>?
+      macAddresses; // Переменная состояния для хранения результатов сканирования
 // В HydraConnect
   void _scanAndReceiveMacAddresses() async {
     // Начало сканирования и ожидание возвращённых данных
@@ -56,21 +53,23 @@ class _HydraConnectState extends State<HydraConnect> {
     }
   }
 
-  final _formKey = GlobalKey<FormState>(); // Добавьте это в состояние вашего виджета
-
+  final _formKey =
+      GlobalKey<FormState>(); // Добавьте это в состояние вашего виджета
 
   final storage = FlutterSecureStorage();
-   String? selectedTariff;
-
+  String? selectedTariff;
+  String? selectedTarifForNextMonth;
 
   late TextEditingController accountNumberController;
 
-     bool isPhoneFieldVisible = false; // Состояние для видимости поля ввода номера телефона
-     TextEditingController phoneController = TextEditingController(); // Контроллер для поля ввода номера телефона
+  bool isPhoneFieldVisible =
+      false; // Состояние для видимости поля ввода номера телефона
+  TextEditingController phoneController =
+      TextEditingController(); // Контроллер для поля ввода номера телефона
   TextEditingController phoneControllerur = TextEditingController();
   TextEditingController accountNumberControllerur = TextEditingController();
+  bool isGiftedTarif = false;
   Map<String, String> tariffs = {
-
     '4469680701': 'Sky70 - 890,00	сом',
     '4469697801': 'Промо 70+ТВ	- 980,00	сом',
     '4470325301': 'Промо 90+ТВ	- 1190,00	сом',
@@ -81,14 +80,16 @@ class _HydraConnectState extends State<HydraConnect> {
     '6898374901': 'Интер 90+ТВ	-	1190,00	сом',
     '6898371001': 'Интер 100	-	1180,00	сом',
     '6898376701': 'Интер 100+ТВ	-	1280,00	сом',
-
-
+    '51153501': 'Gift'
   };
   TextEditingController macAddressController = TextEditingController();
   Map<String, File> capturedImages = {}; // Updated to use a Map
-  Map<String, TextEditingController> reportControllers = {}; // Для хранения контроллеров
-  bool isMacAddressValid = false; // Изначально считаем, что MAC-адрес недействителен
-  bool isInterTariffSelected = false; // New variable to track if 'Интер' tariff is selected
+  Map<String, TextEditingController> reportControllers =
+      {}; // Для хранения контроллеров
+  bool isMacAddressValid =
+      false; // Изначально считаем, что MAC-адрес недействителен
+  bool isInterTariffSelected =
+      false; // New variable to track if 'Интер' tariff is selected
 
   @override
   void initState() {
@@ -97,12 +98,12 @@ class _HydraConnectState extends State<HydraConnect> {
     accountNumberController = TextEditingController(text: widget.accountNumber);
     updateInterTariffVisibility(selectedTariff); // Check initial tariff
   }
+
   void dispose() {
     // Очищаем контроллер, когда виджет удаляется из дерева виджетов
     accountNumberController.dispose();
     super.dispose();
   }
-
 
   // This function updates the isInterTariffSelected variable based on the selected tariff
   void updateInterTariffVisibility(String? tariffKey) {
@@ -114,13 +115,16 @@ class _HydraConnectState extends State<HydraConnect> {
     }
   }
 
-
-
-
-  Future<void> AutoConnect(String macAddress, String selectedTariff, String accaunt,String tv, String accaunt_ur, String tel_ur) async {
-
+  Future<void> autoConnect(
+    String macAddress,
+    String selectedTariff,
+    String accaunt,
+    String tv,
+    String accaunt_ur,
+    String tel_ur,
+    String? gift,
+  ) async {
     BuildContext? dialogContext; // Контекст для диалога
-
 
     // Отображение диалога с индикатором загрузки
     showDialog(
@@ -144,18 +148,38 @@ class _HydraConnectState extends State<HydraConnect> {
       },
     );
 
-
 /////Myrzataev
-    final Uri uri = Uri.parse('http://185.39.79.84:8000/accounts/auto-connetction/');
+    final Uri uri =
+        Uri.parse('http://185.39.79.84:8000/accounts/auto-connetction/');
     Map<String, dynamic> requestBody = {
-
-      "mac_address":"${macAddress.toLowerCase()}",
-      "ls":"$accaunt",
-      "tarif":"$selectedTariff",
-      "tv":"$tv",
-      "ur_ls":"$accaunt_ur",
-      "ur_tel":"$tel_ur"
+      "mac_address": "${macAddress.toLowerCase()}",
+      "ls": "$accaunt",
+      "tarif": selectedTariff,
+      "tv": phoneController.text,
+      "ur_ls": "$accaunt_ur",
+      "ur_tel": "$tel_ur",
+      "gift": isGiftedTarif ? "51153501" : ""
     };
+
+    // print(
+    //   "this is mac address  ${macAddress}",
+    // );
+    // print(
+    //   "this is selectedTarif $selectedTariff",
+    // );
+    // print(
+    //   "this is ls: $accaunt",
+    // );
+    // print("this is tarif $selectedTariff");
+    // print(gift == null);
+
+    // print(
+    //   "phone ${phoneControllerur.text}",
+    // );
+    // print("selectedTarifForNextMonth $selectedTarifForNextMonth");
+    // if (gift != null) {
+    //   requestBody[""] = gift;
+    // }
 
     // Кодирование данных в JSON
     String jsonData = jsonEncode(requestBody);
@@ -181,13 +205,10 @@ class _HydraConnectState extends State<HydraConnect> {
         context.goNamed("searchclient");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Абонент подключен, интернет  заработает  через 15 секунд'),
+            content: Text(
+                'Абонент подключен, интернет  заработает  через 15 секунд'),
           ),
-
-
         );
-
-
       } else {
         if (dialogContext != null) {
           Navigator.of(dialogContext!).pop(); // Закрывает только диалог
@@ -199,23 +220,21 @@ class _HydraConnectState extends State<HydraConnect> {
         );
       }
     } catch (e) {
-
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Ошибка отправки запроса, попробуйте  еще раз или  обратитесь в СПК'),
+          content: Text(
+              'Ошибка отправки запроса, попробуйте  еще раз или  обратитесь в СПК'),
         ),
       );
     }
-
   }
-  Future<void> sendMacDataWithAddress(String macAddress, String selectedTariff, String accaunt, String tv, String accaunt_ur, String tel_ur) async {
 
-
+  Future<void> sendMacDataWithAddress(String macAddress, String selectedTariff,
+      String accaunt, String tv, String accaunt_ur, String tel_ur) async {
 ////Myrzataev
-    final Uri uri = Uri.parse('http://185.39.79.84:8000/accounts/manual-input/');
+    final Uri uri =
+        Uri.parse('http://185.39.79.84:8000/accounts/manual-input/');
     Map<String, dynamic> requestBody = {
-
       'mac_address': macAddress.toLowerCase(),
     };
 
@@ -236,36 +255,26 @@ class _HydraConnectState extends State<HydraConnect> {
       );
 
       if (response.statusCode == 200) {
-
-
-        AutoConnect(macAddress,selectedTariff,accaunt,tv, accaunt_ur,tel_ur);
-
-
-
+        autoConnect(macAddress, selectedTariff, accaunt, tv, accaunt_ur, tel_ur,
+            selectedTarifForNextMonth);
       } else {
-    print(response.body);
+        print(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Указанный MAC-адрес не найден, проверьте правильность указания MAC-адреса'),
+            content: Text(
+                'Указанный MAC-адрес не найден, проверьте правильность указания MAC-адреса'),
           ),
         );
       }
     } catch (e) {
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Ошибка отправки запроса, попробуйте  еще раз или  обратитесь в СПК'),
+          content: Text(
+              'Ошибка отправки запроса, попробуйте  еще раз или  обратитесь в СПК'),
         ),
       );
     }
-
   }
-
-
-
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -291,263 +300,411 @@ class _HydraConnectState extends State<HydraConnect> {
         ),
       ),
       backgroundColor: Colors.white,
-        body: SingleChildScrollView( // Добавляем SingleChildScrollView
-    child: Padding(
-    padding: const EdgeInsets.all(16.0), // Добавляем padding ко всему содержимому
-    child: Column( // Ваш Column теперь внутри SingleChildScrollView
-    children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0), // Задаём горизонтальные и вертикальные отступы
-            child: TextField(
-              controller: accountNumberController,
-              keyboardType: TextInputType.phone,
-              decoration: InputDecoration(
-                labelText: 'Лицевой счет',
-                border: OutlineInputBorder(), // Добавляет границу вокруг поля ввода
-              ),
-            ),
-          ),
-    Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0), // Задаём горизонтальные и вертикальные отступы
-    child:
-    InputDecorator(
-            decoration: InputDecoration(
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              labelText: 'Тариф',
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: selectedTariff,
-                onChanged: (String? newValue) {
-                  setState(() {
-                    selectedTariff = newValue;
-                    updateInterTariffVisibility(newValue); // Обновляем видимость полей для тарифа "Интер"
-                  });
-                },
-                items: tariffs.entries.map<DropdownMenuItem<String>>((entry) {
-                  return DropdownMenuItem<String>(
-                    value: entry.key,
-                    child: Text(entry.value),
-                  );
-                }).toList(),
-              )
-
-            ),
-          ),
-    ),
-
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        child: TextFormField(
-          controller: macAddressController,
-          decoration: InputDecoration(
-            labelText: 'MAC-адрес',
-            hintText: 'XX:XX:XX:XX:XX:XX',
-            border: OutlineInputBorder(),
-          ),
-          keyboardType: TextInputType.text,
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'[0-9A-Fa-f:]')), // Разрешаем только шестнадцатеричные символы и двоеточие
-            LengthLimitingTextInputFormatter(17), // Ограничиваем длину ввода до 17 символов
-            TextInputFormatter.withFunction((oldValue, newValue) {
-              // Форматируем текст в соответствии с маской
-              if (oldValue.text.length >= newValue.text.length) {
-                return TextEditingValue(
-                  text: newValue.text,
-                  selection: TextSelection.collapsed(offset: newValue.selection.baseOffset),
-                );
-              } else if (newValue.text.length == 2 || newValue.text.length == 5 || newValue.text.length == 8 || newValue.text.length == 11 || newValue.text.length == 14) {
-                // Добавляем двоеточие после каждых двух символов, кроме последнего двоеточия
-                return TextEditingValue(
-                  text: '${newValue.text.toUpperCase()}:',
-                  selection: TextSelection.collapsed(offset: newValue.text.length + 1),
-                );
-              }
-              return newValue;
-            }),
-          ],
-          onChanged: (value) {
-            print(value);
-            bool isValid = value.length == 17;
-            if (isMacAddressValid != isValid) {
-              setState(() {
-                isMacAddressValid = isValid;
-              });
-            }
-          },
-        ),
-      ),
-
-
-          Column(
-            children: [
+      body: SingleChildScrollView(
+        // Добавляем SingleChildScrollView
+        child: Padding(
+          padding: const EdgeInsets.all(
+              16.0), // Добавляем padding ко всему содержимому
+          child: Column(
+            // Ваш Column теперь внутри SingleChildScrollView
+            children: <Widget>[
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: CheckboxListTile(
-                  title: Text("Подключить ТВ"),
-                  value: isPhoneFieldVisible,
-                  onChanged: (bool? newValue) {
-                    setState(() {
-                      isPhoneFieldVisible = newValue!;
-                    });
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical:
+                        8.0), // Задаём горизонтальные и вертикальные отступы
+                child: TextField(
+                  controller: accountNumberController,
+                  keyboardType: TextInputType.phone,
+                  decoration: InputDecoration(
+                    labelText: 'Лицевой счет',
+                    border:
+                        OutlineInputBorder(), // Добавляет границу вокруг поля ввода
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical:
+                        8.0), // Задаём горизонтальные и вертикальные отступы
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    labelText: 'Тариф',
+                  ),
+                  child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                    hint: const Text("Выберите тариф"),
+                    disabledHint: const Text("Выберите тариф"),
+                    value: selectedTariff,
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        if (newValue != "51153501") {
+                          isGiftedTarif = false;
+                          selectedTariff = newValue;
+
+                          updateInterTariffVisibility(newValue);
+                        } else {
+                          isGiftedTarif = true;
+                          selectedTariff = newValue;
+                        } // Обновляем видимость полей для тарифа "Интер"
+                      });
+                    },
+                    items:
+                        tariffs.entries.map<DropdownMenuItem<String>>((entry) {
+                      return DropdownMenuItem<String>(
+                        value: entry.key,
+                        child: Text(entry.value),
+                      );
+                    }).toList(),
+                  )),
+                ),
+              ),
+              (isGiftedTarif)
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical:
+                              8.0), // Задаём горизонтальные и вертикальные отступы
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                          contentPadding:
+                              EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          labelText: 'Выберите тариф на следующий месяц',
+                        ),
+                        child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                          value: selectedTarifForNextMonth,
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              // selectedTariff = newValue;
+                              selectedTarifForNextMonth = newValue;
+                              // updateInterTariffVisibility(
+                              //     newValue); // Обновляем видимость полей для тарифа "Интер"
+                            });
+                          },
+                          items: tariffs.entries
+                              .map<DropdownMenuItem<String>>((entry) {
+                                return DropdownMenuItem<String>(
+                                  value: entry.key,
+                                  child: Text(entry.value),
+                                );
+                              })
+                              .toList()
+                              .sublist(0, 10),
+                        )),
+                      ),
+                    )
+                  : const SizedBox(),
+              // Padding(
+              //   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              //   child: TextFormField(
+              //     controller: macAddressController,
+              //     decoration: InputDecoration(
+              //       labelText: 'MAC-адрес',
+              //       hintText: 'XX:XX:XX:XX:XX:XX',
+              //       border: OutlineInputBorder(),
+              //     ),
+              //     keyboardType: TextInputType.text,
+              //     inputFormatters: [
+              //       FilteringTextInputFormatter.allow(RegExp(r'[0-9A-Fa-f:]')), // Разрешаем только шестнадцатеричные символы и двоеточие
+              //       LengthLimitingTextInputFormatter(17), // Ограничиваем длину ввода до 17 символов
+              //       TextInputFormatter.withFunction((oldValue, newValue) {
+              //         // Форматируем текст в соответствии с маской
+              //         if (oldValue.text.length >= newValue.text.length) {
+              //           return TextEditingValue(
+              //             text: newValue.text,
+              //             selection: TextSelection.collapsed(offset: newValue.selection.baseOffset),
+              //           );
+              //         } else if (newValue.text.length == 2 || newValue.text.length == 5 || newValue.text.length == 8 || newValue.text.length == 11 || newValue.text.length == 14) {
+              //           // Добавляем двоеточие после каждых двух символов, кроме последнего двоеточия
+              //           return TextEditingValue(
+              //             text: '${newValue.text.toUpperCase()}:',
+              //             selection: TextSelection.collapsed(offset: newValue.text.length + 1),
+              //           );
+              //         }
+              //         return newValue;
+              //       }),
+              //     ],
+              //     onChanged: (value) {
+              //       print(value);
+              //       bool isValid = value.length == 17;
+              //       if (isMacAddressValid != isValid) {
+              //         setState(() {
+              //           isMacAddressValid = isValid;
+              //         });
+              //       }
+              //     },
+              //   ),
+              // ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: TextFormField(
+                  controller: macAddressController,
+                  decoration: InputDecoration(
+                    labelText: 'MAC-адрес',
+                    hintText: 'xx:xx:xx:xx:xx:xx',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.text,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(
+                        r'[0-9a-f:]')), // Allow only hexadecimal symbols and colon
+                    LengthLimitingTextInputFormatter(
+                        17), // Limit input length to 17 characters
+                    TextInputFormatter.withFunction((oldValue, newValue) {
+                      // Format text according to the mask
+                      final newText = newValue.text.toLowerCase();
+                      if (oldValue.text.length >= newText.length) {
+                        return TextEditingValue(
+                          text: newText,
+                          selection: TextSelection.collapsed(
+                              offset: newValue.selection.baseOffset),
+                        );
+                      } else if (newText.length == 2 ||
+                          newText.length == 5 ||
+                          newText.length == 8 ||
+                          newText.length == 11 ||
+                          newText.length == 14) {
+                        // Add colon after every two characters, except the last colon
+                        return TextEditingValue(
+                          text: '$newText:',
+                          selection: TextSelection.collapsed(
+                              offset: newText.length + 1),
+                        );
+                      }
+                      return TextEditingValue(
+                        text: newText,
+                        selection: newValue.selection,
+                      );
+                    }),
+                  ],
+                  onChanged: (value) {
+                    print(value);
+                    bool isValid = value.length == 17;
+                    if (isMacAddressValid != isValid) {
+                      setState(() {
+                        isMacAddressValid = isValid;
+                      });
+                    }
                   },
                 ),
               ),
-              Visibility(
-                visible: isPhoneFieldVisible,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                  child: TextFormField(
-                    controller: phoneController,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(), // Добавляет границу вокруг поля ввода
-                      labelText: 'Введите номер телефона для ТВ',
-                      hintText: 'ТВ номер в формате 996555112233',
+           
+              Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 8.0),
+                    child: CheckboxListTile(
+                      title: Text("Подключить ТВ"),
+                      value: isPhoneFieldVisible,
+                      onChanged: (bool? newValue) {
+                        setState(() {
+                          isPhoneFieldVisible = newValue!;
+                        });
+                      },
                     ),
-                    keyboardType: TextInputType.phone,
-                    maxLength: 12, // Максимальная длина номера (включая "996")
-                    maxLengthEnforcement: MaxLengthEnforcement.enforced, // Учитывать максимальную длину
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly, // Позволяет вводить только цифры
-                      LengthLimitingTextInputFormatter(12), // Ограничивает длину вводимого текста
-                      // Опционально можно добавить форматирование номера, чтобы автоматически вставлялась "996" в начале
-                      TextInputFormatter.withFunction((oldValue, newValue) {
-                        // newValue - новое значение в поле ввода
-                        // oldValue - предыдущее значение в поле ввода
-                        // Проверяем, если новое значение не содержит "996", то добавляем его
-                        if (newValue.text.isNotEmpty && !newValue.text.startsWith('996')) {
-                          return TextEditingValue(
-                            text: '996${newValue.text}', // Добавляем "996" в начало
-                            selection: TextSelection.collapsed(offset: newValue.text.length + 3), // Устанавливаем курсор в конец
-                          );
-                        }
-                        // Если новое значение уже содержит "996", то оставляем его как есть
-                        return newValue;
-                      }),
-                    ],
+                  ),
+                  Visibility(
+                    visible: isPhoneFieldVisible,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0, vertical: 8.0),
+                      child: TextFormField(
+                        controller: phoneController,
+                        decoration: InputDecoration(
+                          border:
+                              OutlineInputBorder(), // Добавляет границу вокруг поля ввода
+                          labelText: 'Введите номер телефона для ТВ',
+                          hintText: 'ТВ номер в формате 996555112233',
+                        ),
+                        keyboardType: TextInputType.phone,
+                        maxLength:
+                            12, // Максимальная длина номера (включая "996")
+                        maxLengthEnforcement: MaxLengthEnforcement
+                            .enforced, // Учитывать максимальную длину
+                        inputFormatters: [
+                          FilteringTextInputFormatter
+                              .digitsOnly, // Позволяет вводить только цифры
+                          LengthLimitingTextInputFormatter(
+                              12), // Ограничивает длину вводимого текста
+                          // Опционально можно добавить форматирование номера, чтобы автоматически вставлялась "996" в начале
+                          TextInputFormatter.withFunction((oldValue, newValue) {
+                            // newValue - новое значение в поле ввода
+                            // oldValue - предыдущее значение в поле ввода
+                            // Проверяем, если новое значение не содержит "996", то добавляем его
+                            if (newValue.text.isNotEmpty &&
+                                !newValue.text.startsWith('996')) {
+                              return TextEditingValue(
+                                text:
+                                    '996${newValue.text}', // Добавляем "996" в начало
+                                selection: TextSelection.collapsed(
+                                    offset: newValue.text.length +
+                                        3), // Устанавливаем курсор в конец
+                              );
+                            }
+                            // Если новое значение уже содержит "996", то оставляем его как есть
+                            return newValue;
+                          }),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              // ElevatedButton(onPressed: (){
+              //   print(phoneController.text);
+              // }, child: Text("dadadfw")),
+              Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0, vertical: 8.0),
+                      child: Visibility(
+                        visible: isInterTariffSelected,
+                        child: Column(
+                          children: [
+                            TextFormField(
+                              controller: accountNumberControllerur,
+                              decoration: InputDecoration(
+                                border:
+                                    OutlineInputBorder(), // Добавляет границу вокруг поля ввода
+
+                                labelText: 'Лицевой счет Интерком',
+                                hintText: 'Введите лицевой счет',
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Пожалуйста, введите лицевой счет Интерком';
+                                }
+                                return null;
+                              },
+                            ),
+                            SizedBox(
+                                height:
+                                    20.0), // Вертикальный отступ между полями
+
+                            TextFormField(
+                              controller: phoneControllerur,
+                              decoration: InputDecoration(
+                                border:
+                                    OutlineInputBorder(), // Добавляет границу вокруг поля ввода
+
+                                labelText:
+                                    'Номер телефона Интерком, в формате 996555112233',
+                                hintText: 'Введите номер телефона Интерком',
+                              ),
+                              keyboardType: TextInputType.phone,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Пожалуйста, введите номер телефона Интерком';
+                                }
+                                return null;
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: _scanAndReceiveMacAddresses,
+                icon: Icon(Icons.document_scanner), // Иконка сканирования
+                label: Text('Сканировать MAC-адрес'),
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.purple, // Цвет текста и иконки
+                  shape: RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(8.0), // Закругленные углы
                   ),
                 ),
               ),
 
+              ElevatedButton.icon(
+                onPressed: macAddressController.text.length == 17
+                    ? () {
+                        if (_formKey.currentState!.validate()) {
+                          autoConnect(
+                              macAddressController.text,
+                              isGiftedTarif
+                                  ? selectedTarifForNextMonth ?? ""
+                                  : selectedTariff!,
+                              accountNumberController.text,
+                              phoneController.text,
+                              accountNumberControllerur.text,
+                              phoneControllerur.text,
+                              selectedTarifForNextMonth);
+                        }
+                      }
+                    : null, // Кнопка становится неактивной, если длина текста не равна 17
+                icon: Icon(Icons.connect_without_contact),
+                label: Text('Подключить'), // Иконка сканирования
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.deepPurple, // Цвет текста кнопки
+                  elevation: 5, // Тень кнопки
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10), // Скругление углов
+                  ),
+                ),
+              ),
+
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: macAddresses
+                        ?.map((macAddress) => Card(
+                              elevation: 2.0, // Добавляет тень для 3D эффекта
+                              margin: EdgeInsets.symmetric(
+                                  vertical: 4.0,
+                                  horizontal: 8.0), // Отступы вокруг карточки
+                              child: ListTile(
+                                title: SelectableText(
+                                  macAddress
+                                      .toLowerCase(), // Преобразование MAC-адреса в нижний регистр
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                                trailing: IconButton(
+                                  icon: Icon(Icons.copy),
+                                  onPressed: () {
+                                    Clipboard.setData(ClipboardData(
+                                        text: macAddress
+                                            .toLowerCase())); // Также копируем в нижнем регистре
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                          content:
+                                              Text('MAC адрес скопирован')),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ))
+                        .toList() ??
+                    [
+                      Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Text("Нет MAC адресов для отображения"))
+                    ],
+              ),
+              // ElevatedButton(onPressed: () {
+              //   print(tariffs);
+              // }, child: Text("fds"))
             ],
           ),
-          Form(
-            key: _formKey,
-            child : Column(
-              children: [
-          Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child:
-          Visibility(
-            visible: isInterTariffSelected,
-            child: Column(
-              children: [
-                TextFormField(
-                  controller: accountNumberControllerur,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(), // Добавляет границу вокруг поля ввода
-
-                    labelText: 'Лицевой счет Интерком',
-                    hintText: 'Введите лицевой счет',
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Пожалуйста, введите лицевой счет Интерком';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 20.0), // Вертикальный отступ между полями
-
-                TextFormField(
-                  controller: phoneControllerur,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(), // Добавляет границу вокруг поля ввода
-
-                    labelText: 'Номер телефона Интерком, в формате 996555112233',
-                    hintText: 'Введите номер телефона Интерком',
-                  ),
-                  keyboardType: TextInputType.phone,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Пожалуйста, введите номер телефона Интерком';
-                    }
-                    return null;
-                  },
-                ),
-              ],
-            ),
-          ),
-          ),
-              ],
-          ),
-          ),
-          ElevatedButton.icon(
-            onPressed: _scanAndReceiveMacAddresses,
-            icon: Icon(Icons.document_scanner), // Иконка сканирования
-            label: Text('Сканировать MAC-адрес'),
-            style: ElevatedButton.styleFrom(
-              foregroundColor: Colors.white, backgroundColor: Colors.purple, // Цвет текста и иконки
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.0), // Закругленные углы
-              ),
-            ),
-          ),
-
-      ElevatedButton.icon(
-        onPressed: macAddressController.text.length == 17
-            ? () {
-          if (_formKey.currentState!.validate()) {
-            sendMacDataWithAddress(
-                macAddressController.text, selectedTariff!, accountNumberController.text, phoneController.text, accountNumberControllerur.text, phoneControllerur.text);
-
-          }
-       }
-            : null, // Кнопка становится неактивной, если длина текста не равна 17
-        icon: Icon(Icons.connect_without_contact),
-        label: Text('Подключить'),// Иконка сканирования
-        style: ElevatedButton.styleFrom(
-          foregroundColor: Colors.white, backgroundColor: Colors.deepPurple, // Цвет текста кнопки
-          elevation: 5, // Тень кнопки
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10), // Скругление углов
-          ),
-
         ),
       ),
-
-
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: macAddresses?.map((macAddress) => Card(
-          elevation: 2.0, // Добавляет тень для 3D эффекта
-          margin: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0), // Отступы вокруг карточки
-          child: ListTile(
-            title: SelectableText(
-              macAddress.toLowerCase(), // Преобразование MAC-адреса в нижний регистр
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            trailing: IconButton(
-              icon: Icon(Icons.copy),
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: macAddress.toLowerCase())); // Также копируем в нижнем регистре
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('MAC адрес скопирован')),
-                );
-              },
-            ),
-          ),
-        )).toList() ?? [Padding(padding: EdgeInsets.all(8.0), child: Text("Нет MAC адресов для отображения"))],
-      )
-
-
-
-
-        ],
-    ),
-    ),
-        ),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -346,10 +347,12 @@ class _OutfitScreenState extends State<OutfitScreen> {
     switch (statusId) {
       case '1':
         statusIcon = Icons.error_outline; // Icon for "Не начат"
-        return {'message': 'Не начат', 
-        // 'color': Colors.red, 
-        'color': Colors.black, 
-        'icon': statusIcon};
+        return {
+          'message': 'Не начат',
+          // 'color': Colors.red,
+          'color': Colors.black,
+          'icon': statusIcon
+        };
       case '2':
         statusIcon = Icons.directions_bus; // Icon for "В пути"
         return {
@@ -727,9 +730,9 @@ class _OutfitScreenState extends State<OutfitScreen> {
                                             text:
                                                 'Локация: $location\nАдрес: $executor\n'),
                                     TextSpan(
-                                        text: 'Статус: $statusMessage\n',
-                                        // style: TextStyle(color: statusColor)
-                                        ),
+                                      text: 'Статус: $statusMessage\n',
+                                      // style: TextStyle(color: statusColor)
+                                    ),
                                     TextSpan(
                                       children: [
                                         const TextSpan(
@@ -745,19 +748,19 @@ class _OutfitScreenState extends State<OutfitScreen> {
                                       ],
                                     ),
                                     TextSpan(
-                                        text:
-                                            "Лицевой счет: ${_decider(lsListCopy[index])}",
-                                        // text: 'Лицевой счет:${_decider(listOfLsNumbers[index])}',
-                                        // style: const TextStyle(
-                                        //     color: Colors.green)
-                                            ),
+                                      text:
+                                          "Лицевой счет: ${_decider(lsListCopy[index])}",
+                                      // text: 'Лицевой счет:${_decider(listOfLsNumbers[index])}',
+                                      // style: const TextStyle(
+                                      //     color: Colors.green)
+                                    ),
                                     if (isCompleted) // Показать резолюцию, если наряд завершен
                                       TextSpan(
-                                          text:
-                                              '\nРезолюция: ${resolutionInfo['message']}',
-                                          // style: TextStyle(
-                                          //     color: resolutionInfo['color'])
-                                              ),
+                                        text:
+                                            '\nРезолюция: ${resolutionInfo['message']}',
+                                        // style: TextStyle(
+                                        //     color: resolutionInfo['color'])
+                                      ),
                                   ],
                                 ),
                               ),
@@ -770,6 +773,7 @@ class _OutfitScreenState extends State<OutfitScreen> {
                                     ? resolutionInfo['color']
                                     : statusColor, // Цвет для резолюции или статуса
                               ),
+                            
                               onTap: () {
                                 // print(listOfRegions);
 
@@ -822,10 +826,10 @@ class _OutfitScreenState extends State<OutfitScreen> {
     if (difference <= oneDay) {
       return Colors.green; // 1-2 days
     } else if (difference <= oneDay * 5) {
-    return Colors.amber;  // 3-5 days
+      return Colors.amber; // 3-5 days
     } else if (difference <= tenDays) {
-       return Colors.orange;
-       // 6-9 days (you can choose another color here)
+      return Colors.orange;
+      // 6-9 days (you can choose another color here)
     } else {
       return Colors.red; // More than 10 days
     }

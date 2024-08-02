@@ -1,12 +1,14 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:planup/tmc/presentation/blocs/delete_good_bloc/delete_good_bloc.dart';
+import 'package:planup/tmc/presentation/providers/user_role_provider.dart';
 import 'package:planup/tmc/presentation/screens/all_goods_screen.dart';
 import 'package:planup/tmc/presentation/widgets/custom_row.dart';
 
@@ -22,6 +24,8 @@ class DetailedInfoScreen extends StatelessWidget {
   final String nazvanieID;
   final String deleted;
   final String goodStatus;
+  String? photoFromBackend;
+ final String statusId;
 
   DetailedInfoScreen(
       {super.key,
@@ -34,6 +38,8 @@ class DetailedInfoScreen extends StatelessWidget {
       required this.nazvanieID,
       required this.deleted,
       required this.goodStatus,
+      this.photoFromBackend,
+      required this.statusId,
       this.photo});
 
   @override
@@ -98,6 +104,21 @@ class DetailedInfoScreen extends StatelessWidget {
                             padding: EdgeInsets.symmetric(vertical: 10.h),
                             child: Image.file(photo!),
                           ),
+
+                        (photoFromBackend != null ||
+                                (photoFromBackend?.isNotEmpty ?? false))
+                            ? Padding(
+                                padding: EdgeInsets.symmetric(vertical: 10.h),
+                                child: SizedBox(
+                                  width: MediaQuery.of(context).size.width*0.9,
+                                  child: Base64Image(
+
+                                      defaultImagePath:
+                                          "asset/images/not-found-img.png",
+                                      base64String: photoFromBackend ?? ""),
+                                ),
+                              )
+                            : const SizedBox(),
                         // const CustomRow(
                         //   title: "Бренд",
                         //   text: "Tp Link",
@@ -125,58 +146,63 @@ class DetailedInfoScreen extends StatelessWidget {
                   ),
                 ),
               ),
+              
               Column(
                 children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: MaterialButton(
-                        onPressed: () {
-                          showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                    title: const Text(
-                                        "Вы точно хотите удалить товар?"),
-                                    actions: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceEvenly,
-                                        children: [
-                                          MaterialButton(
-                                            color: Colors.blueAccent,
-                                            onPressed: () {
-                                              BlocProvider.of<DeleteGoodBloc>(
-                                                      context)
-                                                  .add(DeleteGoodEvent(id: id));
-                                              Navigator.pop(context);
-                                            },
-                                            child: const Text("Удалить"),
-                                          ),
-                                          MaterialButton(
-                                            color: Colors.red,
-                                            onPressed: () {
-                                              Navigator.pop(context);
-                                            },
-                                            child: const Text("Отмена"),
-                                          )
-                                        ],
-                                      )
-                                    ],
-                                  ));
-                        },
-                        color: Colors.redAccent,
-                        child: const Text("Удалить товар"),
-                      ),
-                    ),
-                  ),
+                  (context.watch<GetUserRoleProvider>().isAdmin ?? false)
+                      ? SizedBox(
+                          width: double.infinity,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: MaterialButton(
+                              onPressed: () {
+                                showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                          title: const Text(
+                                              "Вы точно хотите удалить товар?"),
+                                          actions: [
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.spaceEvenly,
+                                              children: [
+                                                MaterialButton(
+                                                  color: Colors.blueAccent,
+                                                  onPressed: () {
+                                                    BlocProvider.of<
+                                                                DeleteGoodBloc>(
+                                                            context)
+                                                        .add(DeleteGoodEvent(
+                                                            id: id));
+                                                    Navigator.pop(context);
+                                                  },
+                                                  child: const Text("Удалить"),
+                                                ),
+                                                MaterialButton(
+                                                  color: Colors.red,
+                                                  onPressed: () {
+                                                    Navigator.pop(context);
+                                                  },
+                                                  child: const Text("Отмена"),
+                                                )
+                                              ],
+                                            )
+                                          ],
+                                        ));
+                              },
+                              color: Colors.redAccent,
+                              child: const Text("Удалить товар"),
+                            ),
+                          ),
+                        )
+                      : const SizedBox(),
                   BlocListener<DeleteGoodBloc, DeleteGoodState>(
                     listener: (context, state) {
                       if (state is DeleteGoodLoading) {
                         Loader.show(context);
                       } else if (state is DeleteGoodSuccess) {
                         Loader.hide();
-                        GoRouter.of(context).pop();
+                        GoRouter.of(context).pushReplacementNamed("tmc7");
                         showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
@@ -236,7 +262,7 @@ class DetailedInfoScreen extends StatelessWidget {
                       child: MaterialButton(
                         onPressed: () {
                           GoRouter.of(context).pushNamed("trade",
-                              queryParameters: {"goodId": id});
+                              queryParameters: {"goodId": id, "trade": statusId});
                         },
                         color: Colors.blueAccent,
                         child: const Text("Передать товар"),
@@ -250,5 +276,42 @@ class DetailedInfoScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class Base64Image extends StatelessWidget {
+  final String base64String;
+  final String defaultImagePath;
+
+  const Base64Image(
+      {required this.base64String, required this.defaultImagePath, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    try {
+      // Remove potential headers
+      String cleanedBase64String =
+          base64String.replaceAll(RegExp(r'data:image/[^;]+;base64,'), '');
+      Uint8List bytes = base64Decode(cleanedBase64String);
+      print(isValidImage(bytes));
+      // Validate if the decoded bytes form a valid image
+      if (isValidImage(bytes)) {
+        return Image.memory(bytes);
+      } else {
+        return Image.asset(defaultImagePath);
+      }
+    } catch (e) {
+      return Image.asset(defaultImagePath);
+    }
+  }
+
+  bool isValidImage(Uint8List bytes) {
+    try {
+      // Try to decode image
+      final image = Image.memory(bytes);
+      return (image != null && bytes.isNotEmpty);
+    } catch (e) {
+      return false;
+    }
   }
 }

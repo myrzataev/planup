@@ -8,7 +8,7 @@ final class TransferGoodInitial extends TransferGoodState {}
 final class TransferGoodLoading extends TransferGoodState {}
 
 final class TransferGoodSuccess extends TransferGoodState {
-  final TransferGoodModel model;
+  final  TransferGoodModel model;
   TransferGoodSuccess({required this.model});
 }
 

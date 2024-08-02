@@ -26,13 +26,17 @@ import 'package:planup/tmc/data/data_source/deny_trade_ds.dart';
 import 'package:planup/tmc/data/data_source/edit_good_ds.dart';
 import 'package:planup/tmc/data/data_source/get_all_goods_ds.dart';
 import 'package:planup/tmc/data/data_source/get_categories_content_ds.dart';
+import 'package:planup/tmc/data/data_source/get_categories_list_ds.dart';
+import 'package:planup/tmc/data/data_source/get_deleted_goods_ds.dart';
 import 'package:planup/tmc/data/data_source/get_manufactures_list_ds.dart';
 import 'package:planup/tmc/data/data_source/get_models_list_ds.dart';
+import 'package:planup/tmc/data/data_source/get_my_goods_ds.dart';
 import 'package:planup/tmc/data/data_source/get_my_trades_ds.dart';
 import 'package:planup/tmc/data/data_source/get_trade_history_ds.dart';
 import 'package:planup/tmc/data/data_source/get_user_trade_history_ds.dart';
 import 'package:planup/tmc/data/data_source/get_users_ds.dart';
 import 'package:planup/tmc/data/data_source/login_ds.dart';
+import 'package:planup/tmc/data/data_source/trade_multiple_goods_ds.dart';
 import 'package:planup/tmc/data/data_source/transfer_good_ds.dart';
 import 'package:planup/tmc/data/repositories/accept_trade_repo_impl.dart';
 import 'package:planup/tmc/data/repositories/create_category_impl.dart';
@@ -44,13 +48,17 @@ import 'package:planup/tmc/data/repositories/deny_trade_impl.dart';
 import 'package:planup/tmc/data/repositories/edit_good_repo_impl.dart';
 import 'package:planup/tmc/data/repositories/get_all_goods_impl.dart';
 import 'package:planup/tmc/data/repositories/get_categories_content_impl.dart';
+import 'package:planup/tmc/data/repositories/get_categories_list_impl.dart';
+import 'package:planup/tmc/data/repositories/get_deleted_goods_impl.dart';
 import 'package:planup/tmc/data/repositories/get_manufactures_list.dart';
 import 'package:planup/tmc/data/repositories/get_models_list.dart';
+import 'package:planup/tmc/data/repositories/get_my_goods_impl.dart';
 import 'package:planup/tmc/data/repositories/get_my_trades_impl.dart';
 import 'package:planup/tmc/data/repositories/get_trade_hitory_impl.dart';
 import 'package:planup/tmc/data/repositories/get_users_repo_impl.dart';
 import 'package:planup/tmc/data/repositories/get_users_trade_histrory_impl.dart';
 import 'package:planup/tmc/data/repositories/login_repo_impl.dart';
+import 'package:planup/tmc/data/repositories/trade_multiple_goods_impl.dart';
 import 'package:planup/tmc/data/repositories/transfer_good_impl.dart';
 import 'package:planup/tmc/presentation/blocs/accept_trade_bloc/accept_trade_bloc.dart';
 import 'package:planup/tmc/presentation/blocs/create_category_bloc/create_category_bloc.dart';
@@ -62,15 +70,21 @@ import 'package:planup/tmc/presentation/blocs/deny_trade_bloc/deny_trade_bloc.da
 import 'package:planup/tmc/presentation/blocs/edit_good_bloc/edit_good_bloc.dart';
 import 'package:planup/tmc/presentation/blocs/get_all_goods_bloc/get_all_goods_bloc.dart';
 import 'package:planup/tmc/presentation/blocs/get_categories_bloc/get_categories_content_bloc.dart';
+import 'package:planup/tmc/presentation/blocs/get_categories_list_bloc/get_categories_bloc.dart';
+import 'package:planup/tmc/presentation/blocs/get_deleted_goods_bloc/get_deleted_goods_list_bloc.dart';
 import 'package:planup/tmc/presentation/blocs/get_manufactures_bloc/get_manufactures_list_bloc.dart';
 import 'package:planup/tmc/presentation/blocs/get_models_list_bloc/get_models_list_bloc.dart';
+import 'package:planup/tmc/presentation/blocs/get_my_goods_bloc/get_my_goods_bloc.dart';
 import 'package:planup/tmc/presentation/blocs/get_my_trades_bloc/get_my_trades_bloc.dart';
 import 'package:planup/tmc/presentation/blocs/get_trades_history_bloc/get_trades_history_bloc.dart';
 import 'package:planup/tmc/presentation/blocs/get_users_bloc/get_users_bloc.dart';
 import 'package:planup/tmc/presentation/blocs/get_users_trade_history_bloc/get_user_trade_history_bloc.dart';
 import 'package:planup/tmc/presentation/blocs/login_bloc/login_bloc.dart';
+import 'package:planup/tmc/presentation/blocs/trade_multiple_goods_bloc/trade_multiple_goods_bloc.dart';
 import 'package:planup/tmc/presentation/blocs/transfer_good_bloc/transfer_good_bloc.dart';
+import 'package:planup/tmc/presentation/providers/user_role_provider.dart';
 import 'package:planup/views/start.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 import 'login_screen.dart';
@@ -334,7 +348,40 @@ class MyApp extends StatelessWidget {
         RepositoryProvider(
             create: (context) => GetUsersTradeHistroryImpl(
                 dataSource:
-                    RepositoryProvider.of<GetUserTradeHistoryDs>(context)))
+                    RepositoryProvider.of<GetUserTradeHistoryDs>(context))),
+        RepositoryProvider(
+            create: (context) => GetDeletedGoodsDs(
+                dio: RepositoryProvider.of<DioSettings>(context).dio1)),
+        RepositoryProvider(
+            create: (context) => GetDeletedGoodsImpl(
+                deletedGoodsDs:
+                    RepositoryProvider.of<GetDeletedGoodsDs>(context))),
+        RepositoryProvider(
+            create: (context) => GetCategoriesListDs(
+                dio: RepositoryProvider.of<DioSettings>(context).dio1)),
+        RepositoryProvider(
+            create: (context) => GetCategoriesListImpl(
+                dataSource:
+                    RepositoryProvider.of<GetCategoriesListDs>(context))),
+        RepositoryProvider(
+            create: (context) => GetMyGoodsDs(
+                dio: RepositoryProvider.of<DioSettings>(context).dio1,
+                preferences:
+                    RepositoryProvider.of<SharedPreferencesRepository>(context)
+                        .prefs)),
+        RepositoryProvider(
+            create: (context) => GetMyGoodsImpl(
+                dataSource: RepositoryProvider.of<GetMyGoodsDs>(context))),
+        RepositoryProvider(
+            create: (context) => TradeMultipleGoodsDs(
+                dio: RepositoryProvider.of<DioSettings>(context).dio1,
+                preferences:
+                    RepositoryProvider.of<SharedPreferencesRepository>(context)
+                        .prefs)),
+        RepositoryProvider(
+            create: (context) => TradeMultipleGoodsImpl(
+                dataSource:
+                    RepositoryProvider.of<TradeMultipleGoodsDs>(context)))
       ],
       child: MultiBlocProvider(
         providers: [
@@ -407,56 +454,77 @@ class MyApp extends StatelessWidget {
           BlocProvider(
               create: (context) => GetUserTradeHistoryBloc(
                   repoImpl: RepositoryProvider.of<GetUsersTradeHistroryImpl>(
-                      context)))
+                      context))),
+          BlocProvider(
+              create: (context) => GetDeletedGoodsListBloc(
+                  repoImpl:
+                      RepositoryProvider.of<GetDeletedGoodsImpl>(context))),
+          BlocProvider(
+              create: (context) => GetCategoriesBloc(
+                  repoImpl:
+                      RepositoryProvider.of<GetCategoriesListImpl>(context))),
+          BlocProvider(
+              create: (context) => GetMyGoodsBloc(
+                  repoImpl: RepositoryProvider.of<GetMyGoodsImpl>(context))),
+          BlocProvider(
+              create: (context) => TradeMultipleGoodsBloc(
+                  repoImpl:
+                      RepositoryProvider.of<TradeMultipleGoodsImpl>(context)))
         ],
-        child: ScreenUtilInit(
-          designSize: const Size(360, 784),
-          minTextAdapt: true,
-          splitScreenMode: true,
-          child: MaterialApp(
-            debugShowCheckedModeBanner: false,
-            themeMode: ThemeMode.dark, // Установка тёмной темы
-            darkTheme: ThemeData.dark(), // Использование встроенной тёмной темы
+        child: MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (context) => GetUserRoleProvider())
+          ],
+          child: ScreenUtilInit(
+            designSize: const Size(360, 784),
+            minTextAdapt: true,
+            splitScreenMode: true,
+            child: MaterialApp(
+              debugShowCheckedModeBanner: false,
+              themeMode: ThemeMode.dark, // Установка тёмной темы
+              darkTheme:
+                  ThemeData.dark(), // Использование встроенной тёмной темы
 
-            title: 'PlanUp',
+              title: 'PlanUp',
 
-            localizationsDelegates: [
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-              // Add other localization delegates you need
-            ],
-            supportedLocales: [
-              const Locale('en', ''), // English
-              const Locale('es', ''), // Spanish
-              // Add other locales your app supports
-            ],
-            home: FutureBuilder(
-              future: _tryAutoLogin(),
-              builder: (context, snapshot) {
-                // Check if the future is complete
-                if (snapshot.connectionState == ConnectionState.done) {
-                  // If we have data, it means auto login was successful
-                  if (snapshot.hasData && snapshot.data == true) {
-                    return Start();
-                  } else {
-                    return LoginScreen();
-                    // return Start();
+              localizationsDelegates: [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+                // Add other localization delegates you need
+              ],
+              supportedLocales: [
+                const Locale('en', ''), // English
+                const Locale('es', ''), // Spanish
+                // Add other locales your app supports
+              ],
+              home: FutureBuilder(
+                future: _tryAutoLogin(),
+                builder: (context, snapshot) {
+                  // Check if the future is complete
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    // If we have data, it means auto login was successful
+                    if (snapshot.hasData && snapshot.data == true) {
+                      return Start();
+                    } else {
+                      return LoginScreen();
+                      // return Start();
+                    }
                   }
-                }
-                // While we're waiting, show a progress indicator
-                return Scaffold(
-                  backgroundColor: Color.fromRGBO(25, 11, 54, 1.0),
-                  body: Center(
-                    child: Image.asset(
-                      'asset/images/splash.png', // Путь к вашей картинке в assets
-                      width:
-                          200, // Установите размеры картинки по вашему усмотрению
-                      height: 200,
+                  // While we're waiting, show a progress indicator
+                  return Scaffold(
+                    backgroundColor: Color.fromRGBO(25, 11, 54, 1.0),
+                    body: Center(
+                      child: Image.asset(
+                        'asset/images/splash.png', // Путь к вашей картинке в assets
+                        width:
+                            200, // Установите размеры картинки по вашему усмотрению
+                        height: 200,
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ),
         ),

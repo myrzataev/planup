@@ -26,7 +26,7 @@ class GetCategoriesContentBloc
               errorText: "Произошла ошибка: ${e.message}"));
         }
       } catch (e) {
-        emit(GetCategoriesContentError(errorText: e.toString()));
+        emit(GetCategoriesContentError(errorText: "Что то пошло не так, попробуйте снова"));
       }
     });
   }

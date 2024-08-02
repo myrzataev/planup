@@ -11,7 +11,7 @@ class ChooseActionScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xffEDF5FF),
         title: const Text(
-          "Принять/Выдать ТМЦ",
+          "Принять/Выдать материал",
           style: TextStyle(fontFamily: "SanSerif", fontWeight: FontWeight.w500),
         ),
       ),

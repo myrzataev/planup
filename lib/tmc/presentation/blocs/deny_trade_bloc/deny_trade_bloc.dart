@@ -23,7 +23,7 @@ class DenyTradeBloc extends Bloc<DenyTradeEvent, DenyTradeState> {
           emit(DenyTradeError(errorText: "Произошла ошибка: ${e.message}"));
         }
       } catch (e) {
-        emit(DenyTradeError(errorText: e.toString()));
+        emit(DenyTradeError(errorText: "Что то пошло не так, попробуйте снова"));
       }
     });
   }

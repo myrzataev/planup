@@ -77,28 +77,63 @@ class NavBarState extends State<NavBar> {
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          UserAccountsDrawerHeader(
-            accountName: Text('$_surname $_name'),
-            accountEmail: Text(
-                "Доступный баланс: $_balance сом \nСумма оплат: $_availbalance \n$_region область"),
-            currentAccountPicture: CircleAvatar(
-              child: ClipOval(
-                child: Image.network(
-                  'https://www.pngarts.com/files/6/User-Avatar-in-Suit-PNG.png',
-                  fit: BoxFit.cover,
-                  width: 90,
-                  height: 90,
+          Stack(
+            children: [
+              Image.network(
+                  "https://img.freepik.com/free-photo/painted-concrete-background_53876-92961.jpg"),
+              Positioned(
+                top: MediaQuery.of(context).size.height * 0.07,
+                left: 15,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    CircleAvatar(
+                      radius: 35,
+                      child: Image.network(
+                          "https://www.pngarts.com/files/6/User-Avatar-in-Suit-PNG.png"),
+                    ),
+                    Text('$_surname $_name',
+                        style: const TextStyle(color: Colors.white)),
+                    Text(
+                      "Доступный баланс: $_balance сом",
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    Text(
+                      "Сумма оплат: $_availbalance",
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    Text(
+                      "$_region область",
+                      style: const TextStyle(color: Colors.white),
+                    )
+                  ],
                 ),
-              ),
-            ),
-            decoration: const BoxDecoration(
-              color: Colors.blue,
-              image: DecorationImage(
-                  fit: BoxFit.fill,
-                  image: NetworkImage(
-                      'https://img.freepik.com/free-photo/painted-concrete-background_53876-92961.jpg')),
-            ),
+              )
+            ],
           ),
+          // UserAccountsDrawerHeader(
+          //   accountName: Text('$_surname $_name'),
+          //   accountEmail: Text(
+          //       "Доступный баланс: $_balance сом \nСумма оплат: $_availbalance \n$_region область"),
+          //   currentAccountPicture: CircleAvatar(
+          //     child: ClipOval(
+          //       child: Image.network(
+          //         'https://www.pngarts.com/files/6/User-Avatar-in-Suit-PNG.png',
+          //         fit: BoxFit.cover,
+          //         width: 90,
+          //         height: 90,
+          //       ),
+          //     ),
+          //   ),
+          //   decoration: const BoxDecoration(
+          //     color: Colors.blue,
+          //     image: DecorationImage(
+          //         fit: BoxFit.fill,
+          //         image: NetworkImage(
+          //             'https://img.freepik.com/free-photo/painted-concrete-background_53876-92961.jpg')),
+          //   ),
+          // ),
           ListTile(
             leading: const Icon(Icons.money),
             title: const Text('Пополнить лицевой счет'),

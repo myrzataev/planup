@@ -32,7 +32,7 @@ class CreateCategoryBloc
         }
       } catch (e) {
         print("error state");
-        CreateCategoryError(errorText: e.toString());
+       emit(CreateCategoryError(errorText: e.toString()));
       }
     });
   }

@@ -21,7 +21,8 @@ class DeleteGoodBloc extends Bloc<DeleteGoodEvent, DeleteGoodState> {
           emit(DeleteGoodError(errorText: "Произошла ошибка: ${e.message}"));
         }
       } catch (e) {
-        emit(DeleteGoodError(errorText: e.toString()));
+        emit(DeleteGoodError(
+            errorText: "Что то пошло не так, попробуйте снова"));
       }
     });
   }

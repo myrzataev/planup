@@ -91,7 +91,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         } else {
           return Scaffold(
             appBar: AppBar(
-              title: Text(widget.titleOfCourse),
+              title: const Text("Просмотр видео"),
               flexibleSpace: Container(
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
@@ -122,6 +122,15 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         ? SingleChildScrollView(
             child: Column(
               children: [
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+                  child: Text(
+                    widget.titleOfCourse,
+                    style: const TextStyle(
+                        fontFamily: "SanSerif", fontWeight: FontWeight.w700),
+                  ),
+                ),
                 AspectRatio(
                   aspectRatio: 16 / 9,
                   child: YoutubePlayer(
@@ -157,7 +166,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           )
         : Center(
             child: FittedBox(
-              fit: BoxFit.fill,
+              fit: BoxFit.cover,
               child: YoutubePlayer(
                 controller: controller ??
                     YoutubePlayerController(

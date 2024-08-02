@@ -19,11 +19,17 @@ class GetAllGoodsBloc extends Bloc<GetAllGoodsEvent, GetAllGoodsState> {
       } on DioException catch (e) {
         if (e.response?.statusCode == 403) {
           emit(GetAllGoodsError(errorText: "У вас нет доступа"));
+        } else if (e.type == DioExceptionType.sendTimeout) {
+          emit(GetAllGoodsError(errorText: "Проверьте интернет подключение"));
+        } else if (e.type == DioExceptionType.connectionError) {
+          emit(GetAllGoodsError(errorText: "Проверьте интернет подключение"));
+        } else if (e.type == DioExceptionType.receiveTimeout) {
+          emit(GetAllGoodsError(errorText: "Проверьте интернет подключение"));
         } else {
           emit(GetAllGoodsError(errorText: "Произошла ошибка: ${e.message}"));
         }
       } catch (e) {
-        emit(GetAllGoodsError(errorText: e.toString()));
+        emit(GetAllGoodsError(errorText: "Что то пошло не так, попробуйте снова"));
       }
     });
   }

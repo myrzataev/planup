@@ -21,12 +21,21 @@ class GetManufacturesListBloc
       } on DioException catch (e) {
         if (e.response?.statusCode == 403) {
           emit(GetManufacturesListError(errorText: "У вас нет доступа"));
+        } else if (e.type == DioExceptionType.sendTimeout) {
+          emit(GetManufacturesListError(
+              errorText: "Проверьте интернет подключение"));
+        } else if (e.type == DioExceptionType.connectionError) {
+          emit(GetManufacturesListError(
+              errorText: "Проверьте интернет подключение"));
+        } else if (e.type == DioExceptionType.receiveTimeout) {
+          emit(GetManufacturesListError(
+              errorText: "Проверьте интернет подключение"));
         } else {
           emit(GetManufacturesListError(
               errorText: "Произошла ошибка: ${e.message}"));
         }
       } catch (e) {
-        emit(GetManufacturesListError(errorText: e.toString()));
+        emit(GetManufacturesListError(errorText:"Что то пошло не так, попробуйте снова"));
       }
     });
   }

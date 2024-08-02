@@ -1,5 +1,6 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -35,8 +36,7 @@ class WorkOrderDetailsScreen extends StatefulWidget {
 class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
   // late String? _selectedOption;
 
-  GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  GlobalKey<FormState> _formKeyForButton = GlobalKey<FormState>();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   List<dynamic> statuses = []; // Объявление списка статусов
   Map<String, String> selectedStatus = {};
@@ -47,6 +47,18 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
   late List<Widget> infoWidgets;
   Map<String, File> capturedImages = {}; // Updated to use a Map
   final storage = FlutterSecureStorage();
+  final List<String> requiredTextFields = [
+    'Отчет исполнителя абонентская муфта',
+    'Отчет исполнителя проделанные работы (П)',
+    'Отчет исполнителя магистральная муфта (шт.)',
+    'Отчет исполнителя № муфты с которой начали перетяжку',
+    'Отчет исполнителя № муфты на которой закончили перетяжку'
+  ];
+
+// List of required photo fields
+  final List<String> requiredPhotoFields = [
+    'Отчет исполнителя фото бланка-наряда1:'
+  ];
 
   Map<String, TextEditingController> reportControllers =
       {}; // Для хранения контроллеров
@@ -107,6 +119,7 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
   @override
   void initState() {
     super.initState();
+    print('Form key initialized: ${_formKey.currentState}');
 
     fetchStatuses().then((loadedStatuses) {
       setState(() {
@@ -281,9 +294,12 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
         leading:
             Icon((hasLink || hasSchema) ? Icons.image : Icons.info_outline),
         title: Text(cleanedKey),
+        trailing: (cleanedKey == "Лицевой счет")
+            ? const Icon(Icons.copy)
+            : const SizedBox(),
         subtitle:
             Text((hasLink || hasSchema) ? 'Показать' : displayValue.toString()),
-        onTap: () {
+        onTap: () async {
           if (hasLink) {
             final match =
                 RegExp(r'https?://\S+').firstMatch(displayValue.toString());
@@ -299,6 +315,8 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
               final url = match.group(0);
               _showImageDialog(url!);
             }
+          } else if (cleanedKey == "Лицевой счет") {
+            await Clipboard.setData(ClipboardData(text: displayValue));
           }
         },
       );
@@ -381,7 +399,12 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
               ),
               ...phoneNumbers.map((phoneNumber) {
                 return ListTile(
-                  leading: Icon(Icons.phone), // Иконка телефона
+                  leading: const Icon(Icons.phone),
+                  trailing: IconButton(
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: phoneNumber));
+                      },
+                      icon: const Icon(Icons.copy)), // Иконка телефона
                   title: Text(phoneNumber), // Отображаем телефонный номер
                   onTap: () async {
                     launch('tel:${phoneNumber}');
@@ -867,8 +890,276 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
   // late String? _errorText;
   @override
   Widget build(BuildContext context) {
+    print('Building widget, form key state: ${_formKey.currentState}');
+
     var statusInfo = getStatusMessage(statusWorkId);
     var statusColor = getStatusColor(statusWorkId);
+
+    // reportWidgets =
+    //     (widget.workOrder.dynamicFields['work_fields'] as Map<String, dynamic>)
+    //         .entries
+    //         .where((entry) => entry.key.contains('Отчет'))
+    //         .map((entry) {
+    //   final displayedKey = entry.key
+    //       .replaceFirstMapped(RegExp(r'.UF_CRM.*$'), (match) => '')
+    //       .trim();
+    //   final sendKey = entry.key
+    //       .replaceFirstMapped(RegExp(r'^.*UF'), (match) => 'UF')
+    //       .trim();
+
+    //   final isPhoto = entry.key.contains('фото');
+    //   final isNumpad = entry.key.contains('ODF') ||
+    //       !entry.key.contains('работы') ||
+    //       entry.key.contains('ОВ1') ||
+    //       entry.key.contains('UTP') ||
+    //       entry.key.contains('Лицевой счет') ||
+    //       entry.key.contains('Коннектор') ||
+    //       entry.key.contains('Кронштейн') ||
+    //       entry.key.contains('муфте') ||
+    //       entry.key.contains('RCA') ||
+    //       entry.key.contains('оплаченная');
+    //   final isShowUrls = entry.value is String && entry.value.contains('https');
+
+    //   if (isPhoto) {
+    //     // Обработка полей с фотографиями
+    //     return ListTile(
+    //       leading: Icon(Icons.camera_alt),
+    //       title: Text(displayedKey),
+    //       subtitle: widget.workOrder.dynamicFields[sendKey] != null
+    //           ? Image.file(File(widget.workOrder.dynamicFields[
+    //               sendKey])) // Show the captured image if available
+    //           : Text('Сделать фото'),
+    //       onTap: () {
+    //         _captureImage(sendKey); // Capture an image when tapped
+    //       },
+    //       trailing: widget.workOrder.dynamicFields[sendKey] != null
+    //           ? IconButton(
+    //               icon: Icon(Icons.camera_alt),
+    //               onPressed: () {
+    //                 _captureImage(
+    //                     sendKey); // Capture an image when the button is pressed
+    //               },
+    //             )
+    //           : null,
+    //     );
+    //   } else if (isShowUrls) {
+    //     return ListTile(
+    //       leading: Icon(Icons.image),
+    //       title: Text(displayedKey),
+    //       subtitle: Text(entry.value),
+    //       onTap: () {
+    //         if (isShowUrls) {
+    //           _showImageDialog(entry.value);
+    //         }
+    //       },
+    //     );
+    //   } else if (enumerationOptions.containsKey(sendKey)) {
+    //     // Создаем DropdownButtonFormField
+    //     return Column(
+    //       children: [
+    //         ListTile(
+    //           title: DropdownButtonFormField<String>(
+    //             validator: (value) {
+    //               if (value == null || value.isEmpty || value == "default") {
+    //                 return "Пожалуйста заполните все поля";
+    //               }
+    //               return null;
+    //             },
+    //             value: selectedValues[sendKey],
+    //             style: TextStyle(
+    //                 overflow: TextOverflow.ellipsis, color: Colors.black),
+    //             onChanged: (newValue) {
+    //               print(newValue);
+    //               setState(() {
+    //                 selectedValues[sendKey] = newValue ?? '';
+    //                 // _errorText = null;
+    //               });
+    //             },
+    //             items: enumerationOptions[sendKey],
+    //             // hint: Text("choose"),
+    //             decoration: InputDecoration(
+    //               labelText: sendKey,
+    //             ),
+    //           ),
+    //         ),
+    //         // _errorText != null
+    //         //     ? Text(
+    //         //         _errorText ?? "",
+    //         //         style: const TextStyle(color: Colors.red),
+    //         //       )
+    //         //     : const SizedBox()
+    //       ],
+    //     );
+    //   } else if (isNumpad) {
+    //     // Создаем TextFormField
+    //     return ListTile(
+    //       title: TextFormField(
+    //         validator: (value) {
+    //           if (value == null || value.isEmpty) {
+    //             return "Пожалуйста заполните все поля";
+    //           }
+    //           return null;
+    //         },
+
+    //         controller: reportControllers[sendKey],
+    //         decoration: InputDecoration(labelText: sendKey),
+    //         keyboardType:
+    //             TextInputType.number, // Устанавливаем числовую клавиатуру
+    //       ),
+    //     );
+    //   } else {
+    //     // Создаем TextFormField
+    //     return ListTile(
+    //       title: TextFormField(
+    //         validator: (value) {
+    //           if (value == null || value.isEmpty) {
+    //             return "Пожалуйста заполните все поля";
+    //           }
+    //           return null;
+    //         },
+    //         controller: reportControllers[sendKey],
+    //         decoration: InputDecoration(labelText: sendKey),
+    //       ),
+    //     );
+    //   }
+    // }).toList();
+    // reportWidgets =
+    //     (widget.workOrder.dynamicFields['work_fields'] as Map<String, dynamic>)
+    //         .entries
+    //         .where((entry) => entry.key.contains('Отчет'))
+    //         .map((entry) {
+    //   final displayedKey = entry.key
+    //       .replaceFirstMapped(RegExp(r'.UF_CRM.*$'), (match) => '')
+    //       .trim();
+    //   final sendKey = entry.key
+    //       .replaceFirstMapped(RegExp(r'^.*UF'), (match) => 'UF')
+    //       .trim();
+
+    //   final isPhoto = entry.key.contains('фото');
+    //   final isNumpad = entry.key.contains('ODF') ||
+    //       !entry.key.contains('работы') ||
+    //       entry.key.contains('ОВ1') ||
+    //       entry.key.contains('UTP') ||
+    //       entry.key.contains('Лицевой счет') ||
+    //       entry.key.contains('Коннектор') ||
+    //       entry.key.contains('Кронштейн') ||
+    //       entry.key.contains('муфте') ||
+    //       entry.key.contains('RCA') ||
+    //       entry.key.contains('оплаченная');
+    //   final isShowUrls = entry.value is String && entry.value.contains('https');
+
+    //   // List of required fields
+    //   final requiredTextFields = [
+    //     'Отчет исполнителя абонентская муфта',
+    //     'Отчет исполнителя проделанные работы (П)',
+    //     'Отчет исполнителя магистральная муфта (шт.)',
+    //     'Отчет исполнителя № муфты с которой начали перетяжку',
+    //     'Отчет исполнителя № муфты на которой закончили перетяжку'
+    //   ];
+    //   final requiredPhotoFields = ['Отчет исполнителя фото бланка-наряда1'];
+
+    //   if (isPhoto) {
+    //     // Check if this specific photo field is required
+    //     final isRequiredPhoto =
+    //         requiredPhotoFields.any((field) => entry.key.contains(field));
+
+    //     return ListTile(
+    //       leading: const Icon(Icons.camera_alt),
+    //       title: Text(displayedKey),
+    //       subtitle: widget.workOrder.dynamicFields[sendKey] != null
+    //           ? Image.file(File(widget.workOrder.dynamicFields[
+    //               sendKey])) // Show the captured image if available
+    //           : Text(isRequiredPhoto
+    //               ? 'Сделать фото (Обязательно)'
+    //               : 'Сделать фото'),
+    //       onTap: () {
+    //         _captureImage(sendKey); // Capture an image when tapped
+    //       },
+    //       trailing: widget.workOrder.dynamicFields[sendKey] != null
+    //           ? IconButton(
+    //               icon: const Icon(Icons.camera_alt),
+    //               onPressed: () {
+    //                 _captureImage(
+    //                     sendKey); // Capture an image when the button is pressed
+    //               },
+    //             )
+    //           : null,
+    //     );
+    //   } else if (isShowUrls) {
+    //     return ListTile(
+    //       leading: Icon(Icons.image),
+    //       title: Text(displayedKey),
+    //       subtitle: Text(entry.value),
+    //       onTap: () {
+    //         if (isShowUrls) {
+    //           _showImageDialog(entry.value);
+    //         }
+    //       },
+    //     );
+    //   } else if (enumerationOptions.containsKey(sendKey)) {
+    //     // Create DropdownButtonFormField
+    //     return Column(
+    //       children: [
+    //         ListTile(
+    //           title: DropdownButtonFormField<String>(
+    //             validator: (value) {
+    //               if (value == null || value.isEmpty || value == "default") {
+    //                 return "Пожалуйста заполните все поля";
+    //               }
+    //               return null;
+    //             },
+    //             value: selectedValues[sendKey],
+    //             style: const TextStyle(
+    //                 overflow: TextOverflow.ellipsis, color: Colors.black),
+    //             onChanged: (newValue) {
+    //               print(newValue);
+    //               setState(() {
+    //                 selectedValues[sendKey] = newValue ?? '';
+    //                 // _errorText = null;
+    //               });
+    //             },
+    //             items: enumerationOptions[sendKey],
+    //             decoration: InputDecoration(
+    //               labelText: sendKey,
+    //             ),
+    //           ),
+    //         ),
+    //       ],
+    //     );
+    //   } else if (isNumpad) {
+    //     // Create TextFormField
+    //     return ListTile(
+    //       title: TextFormField(
+    //         validator: (value) {
+    //           if (value == null || value.isEmpty) {
+    //             return "Пожалуйста заполните все поля";
+    //           }
+    //           return null;
+    //         },
+    //         controller: reportControllers[sendKey],
+    //         decoration: InputDecoration(labelText: sendKey),
+    //         keyboardType: TextInputType.number, // Set the numeric keyboard
+    //       ),
+    //     );
+    //   } else {
+    //     // Create TextFormField
+    //     final isRequiredText =
+    //         requiredTextFields.any((field) => entry.key.contains(field));
+
+    //     return ListTile(
+    //       title: TextFormField(
+    //         validator: (value) {
+    //           if (isRequiredText && (value == null || value.isEmpty)) {
+    //             return "Это поле обязательно для заполнения";
+    //           }
+    //           return null;
+    //         },
+    //         controller: reportControllers[sendKey],
+    //         decoration: InputDecoration(labelText: sendKey),
+    //       ),
+    //     );
+    //   }
+    // }).toList();
     reportWidgets =
         (widget.workOrder.dynamicFields['work_fields'] as Map<String, dynamic>)
             .entries
@@ -894,29 +1185,39 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
           entry.key.contains('оплаченная');
       final isShowUrls = entry.value is String && entry.value.contains('https');
 
+      // Determine if current field requires validation
+      final requiresValidation = requiredTextFields.contains(displayedKey);
+
       if (isPhoto) {
-        // Обработка полей с фотографиями
+        // Handling fields with photos
         return ListTile(
           leading: Icon(Icons.camera_alt),
           title: Text(displayedKey),
           subtitle: widget.workOrder.dynamicFields[sendKey] != null
-              ? Image.file(File(widget.workOrder.dynamicFields[
-                  sendKey])) // Show the captured image if available
-              : Text('Сделать фото'),
+              ? Image.file(File(widget.workOrder.dynamicFields[sendKey]))
+              : const Row(
+                  children: [
+                    Text('Сделать фото'),
+                    Text(
+                      ' *Обьязательное поле',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ],
+                ),
           onTap: () {
-            _captureImage(sendKey); // Capture an image when tapped
+            _captureImage(sendKey);
           },
           trailing: widget.workOrder.dynamicFields[sendKey] != null
               ? IconButton(
                   icon: Icon(Icons.camera_alt),
                   onPressed: () {
-                    _captureImage(
-                        sendKey); // Capture an image when the button is pressed
+                    _captureImage(sendKey);
                   },
                 )
               : null,
         );
       } else if (isShowUrls) {
+        // Handling fields displaying URLs
         return ListTile(
           leading: Icon(Icons.image),
           title: Text(displayedKey),
@@ -928,75 +1229,73 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
           },
         );
       } else if (enumerationOptions.containsKey(sendKey)) {
-        // Создаем DropdownButtonFormField
+        // Creating DropdownButtonFormField
         return Column(
           children: [
             ListTile(
               title: DropdownButtonFormField<String>(
-                validator: (value) {
-                  if (value == null || value.isEmpty || value == "default") {
-                    return "Пожалуйста заполните все поля";
-                  }
-                  return null;
-                },
+                validator: requiresValidation
+                    ? (value) {
+                        if (value == null ||
+                            value.isEmpty ||
+                            value == "default") {
+                          return "Пожалуйста, заполните это поле";
+                        }
+                        return null;
+                      }
+                    : null,
                 value: selectedValues[sendKey],
                 style: TextStyle(
                     overflow: TextOverflow.ellipsis, color: Colors.black),
                 onChanged: (newValue) {
-                  print(newValue);
                   setState(() {
                     selectedValues[sendKey] = newValue ?? '';
-                    // _errorText = null;
                   });
                 },
                 items: enumerationOptions[sendKey],
-                // hint: Text("choose"),
                 decoration: InputDecoration(
                   labelText: sendKey,
                 ),
               ),
             ),
-            // _errorText != null
-            //     ? Text(
-            //         _errorText ?? "",
-            //         style: const TextStyle(color: Colors.red),
-            //       )
-            //     : const SizedBox()
           ],
         );
       } else if (isNumpad) {
-        // Создаем TextFormField
+        // Creating TextFormField with numeric keyboard
         return ListTile(
           title: TextFormField(
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return "Пожалуйста заполните все поля";
-              }
-              return null;
-            },
-
+            validator: requiresValidation
+                ? (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Пожалуйста, заполните это поле";
+                    }
+                    return null;
+                  }
+                : null,
             controller: reportControllers[sendKey],
             decoration: InputDecoration(labelText: sendKey),
-            keyboardType:
-                TextInputType.number, // Устанавливаем числовую клавиатуру
+            keyboardType: TextInputType.number,
           ),
         );
       } else {
-        // Создаем TextFormField
+        // Creating TextFormField
         return ListTile(
           title: TextFormField(
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return "Пожалуйста заполните все поля";
-              }
-              return null;
-            },
+            validator: requiresValidation
+                ? (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Пожалуйста, заполните это поле";
+                    }
+                    return null;
+                  }
+                : null,
             controller: reportControllers[sendKey],
             decoration: InputDecoration(labelText: sendKey),
           ),
         );
       }
     }).toList();
+
     // String extractNestedValue(dynamic value) {
     //   // Если значение уже является строкой, просто возвращаем ее
     //   if (value is String) return value;
@@ -1067,7 +1366,6 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     Container(
-
                       padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: statusColor,
@@ -1130,11 +1428,10 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
                         ),
                       );
                     } else {
-                        Navigator.pushReplacement(
+                      Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (_) =>
-                             const HydraConnect(accountNumber: ""),
+                          builder: (_) => const HydraConnect(accountNumber: ""),
                         ),
                       );
                       // Если 'Лицевой счет' не найден или данные не соответствуют ожидаемому формату
@@ -1160,29 +1457,32 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
           children: [
             // "Details" tab
             SingleChildScrollView(
-              child: Column(
-                children: <Widget>[
-                  Card(
-                    margin: EdgeInsets.all(5.0),
-                    child: Padding(
-                      padding: EdgeInsets.all(1.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: infoWidgets,
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: <Widget>[
+                    Card(
+                      margin: EdgeInsets.all(5.0),
+                      child: Padding(
+                        padding: EdgeInsets.all(1.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: infoWidgets,
+                        ),
                       ),
                     ),
-                  ),
-                  Card(
-                    margin: EdgeInsets.all(5.0),
-                    child: Padding(
-                      padding: EdgeInsets.all(1.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: detailsWidgets,
+                    Card(
+                      margin: EdgeInsets.all(5.0),
+                      child: Padding(
+                        padding: EdgeInsets.all(1.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: detailsWidgets,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
 
@@ -1264,17 +1564,29 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () {
+                    print("object");
                     // print(_formKey.currentState);
                     // if (_formKey.currentState!.validate()
                     // _formKeyForButton.currentState!.validate()
                     // _selectedOption != null
-                    // ) {
-                    _endWithConfirmation();
-                    // } else {
-                    //   // _errorText = 'Please select an option';
-                    //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    //       content: Text("Пожалуйста заполните все поля")));
-                    // }
+                    //     // ) {
+                    if (_formKey.currentState!.validate()) {
+                      // If the form is valid, proceed with the desired action
+                      _endWithConfirmation();
+                    } else {
+                      // If the form is invalid, show a message
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text(
+                                'Пожалуйста, заполните все обязательные поля')),
+                      );
+                    }
+                    //     // _endWithConfirmation();
+                    //     // } else {
+                    //     //   // _errorText = 'Please select an option';
+                    //     //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    //     //       content: Text("Пожалуйста заполните все поля")));
+                    //     // }
                   },
                   child:
                       Text('Завершить', style: TextStyle(color: Colors.white)),

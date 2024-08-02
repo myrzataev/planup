@@ -491,9 +491,9 @@ class _OpenServiceState extends State<OpenService> {
                                           text:
                                               'Локация: $location\nАдрес: $executor\n'),
                                       TextSpan(
-                                          text: 'Статус: $statusMessage\n',
-                                          // style: TextStyle(color: statusColor)
-                                          ),
+                                        text: 'Статус: $statusMessage\n',
+                                        // style: TextStyle(color: statusColor)
+                                      ),
                                       TextSpan(
                                         children: [
                                           const TextSpan(
@@ -540,6 +540,7 @@ class _OpenServiceState extends State<OpenService> {
                           },
                         ),
                 ),
+                
               ],
             ),
     );
@@ -555,7 +556,7 @@ class _OpenServiceState extends State<OpenService> {
     if (difference <= oneDay) {
       return Colors.green; // 1-2 days
     } else if (difference <= oneDay * 5) {
-      return Colors.amber;  // 3-5 days
+      return Colors.amber; // 3-5 days
     } else if (difference <= tenDays) {
       return Colors.orange;
       // 6-9 days (you can choose another color here)

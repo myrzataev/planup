@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:bloc/bloc.dart';
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
-import 'package:planup/tmc/data/models/all_goods_model.dart';
 import 'package:planup/tmc/data/models/single_good_model.dart';
 import 'package:planup/tmc/data/repositories/create_new_good_impl.dart';
 
@@ -20,6 +19,7 @@ class CreateNewGoodBloc extends Bloc<CreateNewGoodEvent, CreateNewGoodState> {
             id: event.id,
             barcode: event.barcode,
             goodStatusId: event.goodStatusId,
+            photo: event.photo,
             productType: event.productType);
         emit(CreateNewGoodSuccess(model: result));
       } on DioException catch (e) {

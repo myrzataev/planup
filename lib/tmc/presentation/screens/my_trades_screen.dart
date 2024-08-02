@@ -27,6 +27,11 @@ class _TradeHistoryListScreenState extends State<MyTradesScreen> {
     super.initState();
     _loadTrades();
   }
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
 
   void _loadTrades() {
     final userId = preferences.getInt("userNameForTmc")?.toString() ?? '';

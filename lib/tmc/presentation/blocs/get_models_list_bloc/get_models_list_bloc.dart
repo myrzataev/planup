@@ -18,11 +18,17 @@ class GetModelsListBloc extends Bloc<GetModelsListEvent, GetModelsListState> {
       } on DioException catch (e) {
         if (e.response?.statusCode == 403) {
           emit(GetModelsListError(errorText: "У вас нет доступа"));
+        } else if (e.type == DioExceptionType.sendTimeout) {
+          emit(GetModelsListError(errorText: "Проверьте интернет подключение"));
+        } else if (e.type == DioExceptionType.connectionError) {
+          emit(GetModelsListError(errorText: "Проверьте интернет подключение"));
+        } else if (e.type == DioExceptionType.receiveTimeout) {
+          emit(GetModelsListError(errorText: "Проверьте интернет подключение"));
         } else {
           emit(GetModelsListError(errorText: "Произошла ошибка: ${e.message}"));
         }
       } catch (e) {
-        emit(GetModelsListError(errorText: e.toString()));
+        emit(GetModelsListError(errorText:"Что то пошло не так, попробуйте снова"));
       }
     });
   }

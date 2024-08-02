@@ -16,7 +16,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       backgroundColor: const Color(0xffD5E2F2),
       appBar: AppBar(
         backgroundColor: const Color(0xffD5E2F2),
-        title: const Text("Мои ТМЦ"),
+        title: const Text("Мои материалы"),
       ),
       body: SingleChildScrollView(
         child: Column(

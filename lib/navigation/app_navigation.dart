@@ -7,10 +7,12 @@ import 'package:planup/page3.dart';
 import 'package:planup/study/data/models/video_model.dart';
 import 'package:planup/study/presentation/screens/videoplayer_screen.dart';
 import 'package:planup/news/presentation/screens/news_page.dart';
+import 'package:planup/tmc/data/models/make_multiple_trade_model.dart';
 import 'package:planup/tmc/presentation/screens/all_goods_screen.dart';
 import 'package:planup/tmc/presentation/screens/categories_screen.dart';
 import 'package:planup/tmc/presentation/screens/choose_action.dart';
 import 'package:planup/tmc/presentation/screens/create_tmc_screen.dart';
+import 'package:planup/tmc/presentation/screens/deleted_goods_list_screen.dart';
 import 'package:planup/tmc/presentation/screens/detailed_info.dart';
 import 'package:planup/tmc/presentation/screens/edit_good_screen.dart';
 import 'package:planup/tmc/presentation/screens/main_menu.dart';
@@ -308,22 +310,31 @@ class AppNavigation {
             ),
             GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
+              path: "deletedGoods",
+              name: "deletedGoods",
+              builder: (context, state) {
+                return const DeletedGoodsListScreen();
+              },
+            ),
+            GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
               path: "trade",
               name: "trade",
               builder: (context, state) {
                 return TradeGoodsScreen(
+                  statusId: state.uri.queryParameters["statusId"] ?? "1",
                   goodID: state.uri.queryParameters["goodId"] ?? "",
+                  isMultipleTrade: (state.uri.queryParameters["isMultipleTrade"]?.toLowerCase() == 'true'),
+                  goodsList: state.extra as List<Trade>,
                 );
               },
             ),
-             GoRoute(
+            GoRoute(
               parentNavigatorKey: _rootNavigatorKey,
               path: "myTrades",
               name: "myTrades",
               builder: (context, state) {
-                return const MyTradesScreen(
-                  
-                );
+                return const MyTradesScreen();
               },
             ),
             GoRoute(
@@ -356,6 +367,7 @@ class AppNavigation {
                     photoFile = File(photoPath);
                   }
                   return DetailedInfoScreen(
+                    photoFromBackend: state.uri.queryParameters["photoFromBackend"],
                     manufacture: state.uri.queryParameters["manufacture"] ?? "",
                     model: state.uri.queryParameters["model"] ?? "",
                     cost: state.uri.queryParameters["cost"] ?? "",
@@ -366,6 +378,7 @@ class AppNavigation {
                     deleted: state.uri.queryParameters["deleted"] ?? "",
                     nazvanieID: state.uri.queryParameters["nazvanieID"] ?? "",
                     goodStatus: state.uri.queryParameters["goodStatus"] ?? "",
+                    statusId:  state.uri.queryParameters["statusId"] ?? "1",
                   );
                 },
                 routes: [

@@ -104,7 +104,11 @@ class _MyTmcScreenState extends State<MyTmcScreen1> {
     initList();
     super.initState();
   }
-
+@override
+  void dispose() {
+   controller.dispose();
+    super.dispose();
+  }
   void initList() {
     cardListCopy = List.from(cardList);
   }
@@ -127,7 +131,7 @@ class _MyTmcScreenState extends State<MyTmcScreen1> {
         backgroundColor: const Color(0xffD5E2F2),
         appBar: AppBar(
           backgroundColor: const Color(0xffD5E2F2),
-          title: const Text("Мои ТМЦ"),
+          title: const Text("Мои материалы"),
         ),
         body: Column(
           children: [

@@ -16,17 +16,19 @@ class CustomVideoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10, left: 5, right: 5),
-      child: Container(
-        width: double.infinity,
-        height: 110,
-        decoration: BoxDecoration(boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
-            spreadRadius: 0.2,
-            blurRadius: 2,
-            offset: const Offset(0, 1), // changes position of shadow
-          ),
-        ], color: Colors.white, borderRadius: BorderRadius.circular(15)),
+      child: Card(
+        color: Colors.white,
+        shadowColor: Colors.grey.withOpacity(0.5),
+        // width: double.infinity,
+        // height: 110,
+        // decoration: BoxDecoration(boxShadow: [
+        //   BoxShadow(
+        //     color: Colors.grey.withOpacity(0.5),
+        //     spreadRadius: 0.2,
+        //     blurRadius: 2,
+        //     offset: const Offset(0, 1), // changes position of shadow
+        //   ),
+        // ], color: Colors.white, borderRadius: BorderRadius.circular(15)),
         child: Row(
           children: [
             Padding(
@@ -48,7 +50,7 @@ class CustomVideoCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      maxLines: 1,
+                      maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       softWrap: true,
                       title,

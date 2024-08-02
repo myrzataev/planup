@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:planup/core/services/shared_preferences_init.dart';
 import 'package:planup/tmc/presentation/blocs/login_bloc/login_bloc.dart';
+import 'package:planup/tmc/presentation/providers/user_role_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MainMenuScreen extends StatefulWidget {
@@ -60,6 +61,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 preferences.setString(
                     "bearerToken", state.model.accessToken ?? "");
                 preferences.setInt("userNameForTmc", state.model.userId ?? 0);
+                context.read<GetUserRoleProvider>().changeRole(state.model.permissionName);
               });
             }
           },
@@ -80,7 +82,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                             GoRouter.of(context).pushNamed("createTMC");
                           },
                           icon: "asset/images/settings.png",
-                          text: "Создать ТМЦ",
+                          text: "Создать материал",
                         ),
                       )
                     : const SizedBox()),
@@ -92,7 +94,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                       GoRouter.of(context).pushNamed("chooseAction");
                     },
                     icon: "asset/images/team.png",
-                    text: "Принять/Выдать ТМЦ",
+                    text: "Принять/Выдать товар",
                   ),
                 ),
                 // Padding(
@@ -114,24 +116,24 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                       GoRouter.of(context).pushNamed("allgoods");
                     },
                     icon: "asset/images/portfolio.png",
-                    text: "Мои ТМЦ",
+                    text: "Мои материалы",
                   ),
                 ),
-                // ElevatedButton(
-                //     onPressed: () {
-                //       print(preferences.getString("bearerToken"));
-                //     },
-                //     child: Text("fasne"))
-                // Padding(
-                //   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                //   child: CustomTmcCard(
-                //     onTap: () {
-                //       GoRouter.of(context).pushNamed("allgoods");
-                //     },
-                //     icon: "asset/images/trash.png",
-                //     text: "Списание",
-                //   ),
-                // ),
+
+                (state.model.permissionName == null ||
+                        (state.model.permissionName == "Заведующий склада"))
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        child: CustomTmcCard(
+                          onTap: () {
+                            GoRouter.of(context).pushNamed("deletedGoods");
+                          },
+                          icon: "asset/images/trash.png",
+                          text: "Список удаленных товаров",
+                        ),
+                      )
+                    : const SizedBox(),
               ]);
             } else if (state is LoginError) {
               return Text(state.errorText);

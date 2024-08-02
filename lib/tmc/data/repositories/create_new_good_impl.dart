@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:planup/tmc/data/data_source/create_new_good_ds.dart';
-import 'package:planup/tmc/data/models/all_goods_model.dart';
 import 'package:planup/tmc/data/models/single_good_model.dart';
 import 'package:planup/tmc/domain/repository/create_new_good_repo.dart';
 
@@ -19,6 +18,7 @@ class CreateNewGoodImpl implements CreateNewGoodRepo {
         id: id,
         barcode: barcode,
         goodStatusId: goodStatusId,
+        photo: photo,
         productType: productType);
   }
 }
