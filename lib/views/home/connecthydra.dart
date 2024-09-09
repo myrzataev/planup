@@ -1,16 +1,10 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'package:dio/dio.dart';
-import 'package:gallery_saver/gallery_saver.dart';
-import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:planup/views/home/scanmac.dart';
 
 class HydraConnect extends StatefulWidget {
@@ -59,7 +53,8 @@ class _HydraConnectState extends State<HydraConnect> {
   final storage = FlutterSecureStorage();
   String? selectedTariff;
   String? selectedTarifForNextMonth;
-
+  final List<String> companies = ["Skynet Telecom", "Intercom"];
+  String? selectedCompany;
   late TextEditingController accountNumberController;
 
   bool isPhoneFieldVisible =
@@ -69,11 +64,16 @@ class _HydraConnectState extends State<HydraConnect> {
   TextEditingController phoneControllerur = TextEditingController();
   TextEditingController accountNumberControllerur = TextEditingController();
   bool isGiftedTarif = false;
+  bool isCompanySelected = false;
+
   Map<String, String> tariffs = {
     '4469680701': 'Sky70 - 890,00	сом',
     '4469697801': 'Промо 70+ТВ	- 980,00	сом',
     '4470325301': 'Промо 90+ТВ	- 1190,00	сом',
     '4470378201': 'Промо 100+ТВ	- 1280,00	сом ',
+    '51153501': 'Gift'
+  };
+  Map<String, String> interComTariffs = {
     '6898370401': 'Интер 70	-	890,00	сом',
     '6898374601': 'Интер 70+ТВ	-	980,00	сом',
     '6898370601': 'Интер 90	-	1090,00	сом',
@@ -229,8 +229,15 @@ class _HydraConnectState extends State<HydraConnect> {
     }
   }
 
-  Future<void> sendMacDataWithAddress(String macAddress, String selectedTariff,
-      String accaunt, String tv, String accaunt_ur, String tel_ur) async {
+  Future<void> sendMacDataWithAddress(
+      {required String macAddress,
+      required String selectedTariff,
+      required String accaunt,
+      required String tv,
+      // ignore: non_constant_identifier_names
+      required String accaunt_ur,
+      // ignore: non_constant_identifier_names
+      required String tel_ur}) async {
 ////Myrzataev
     final Uri uri =
         Uri.parse('http://185.39.79.84:8000/accounts/manual-input/');
@@ -255,8 +262,16 @@ class _HydraConnectState extends State<HydraConnect> {
       );
 
       if (response.statusCode == 200) {
-        autoConnect(macAddress, selectedTariff, accaunt, tv, accaunt_ur, tel_ur,
+        autoConnect(
+            macAddressController.text,
+            isGiftedTarif ? selectedTarifForNextMonth ?? "" : selectedTariff,
+            accountNumberController.text,
+            phoneController.text,
+            accountNumberControllerur.text,
+            phoneControllerur.text,
             selectedTarifForNextMonth);
+        // autoConnect(macAddress, selectedTariff, accaunt, tv, accaunt_ur, tel_ur,
+        //     selectedTarifForNextMonth);
       } else {
         print(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -278,6 +293,8 @@ class _HydraConnectState extends State<HydraConnect> {
 
   @override
   Widget build(BuildContext context) {
+    final Map<String, String> currentTariffs =
+        selectedCompany == "Skynet Telecom" ? tariffs : interComTariffs;
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.accountNumber),
@@ -334,36 +351,74 @@ class _HydraConnectState extends State<HydraConnect> {
                         borderRadius: BorderRadius.circular(8)),
                     contentPadding:
                         EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                    labelText: 'Тариф',
+                    labelText: 'Компания',
                   ),
                   child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
-                    hint: const Text("Выберите тариф"),
-                    disabledHint: const Text("Выберите тариф"),
-                    value: selectedTariff,
+                    isExpanded: true,
+                    hint: const Text("Выберите компанию где вы работаете"),
+                    disabledHint:
+                        const Text("Выберите компанию где вы работаете"),
+                    value: selectedCompany,
                     onChanged: (String? newValue) {
                       setState(() {
-                        if (newValue != "51153501") {
-                          isGiftedTarif = false;
-                          selectedTariff = newValue;
-
-                          updateInterTariffVisibility(newValue);
-                        } else {
-                          isGiftedTarif = true;
-                          selectedTariff = newValue;
-                        } // Обновляем видимость полей для тарифа "Интер"
+                        isCompanySelected = true;
+                        selectedCompany = newValue;
                       });
                     },
-                    items:
-                        tariffs.entries.map<DropdownMenuItem<String>>((entry) {
+                    items: companies.map<DropdownMenuItem<String>>((entry) {
                       return DropdownMenuItem<String>(
-                        value: entry.key,
-                        child: Text(entry.value),
+                        value: entry,
+                        child: Text(entry),
                       );
                     }).toList(),
                   )),
                 ),
               ),
+              isCompanySelected
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical:
+                              8.0), // Задаём горизонтальные и вертикальные отступы
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                          contentPadding:
+                              EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          labelText: 'Тариф',
+                        ),
+                        child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                                hint: const Text("Выберите тариф"),
+                                disabledHint: const Text("Выберите тариф"),
+                                value:
+                                    currentTariffs.containsKey(selectedTariff)
+                                        ? selectedTariff
+                                        : null,
+                                onChanged: (String? newValue) {
+                                  setState(() {
+                                    if (newValue != "51153501") {
+                                      isGiftedTarif = false;
+                                      selectedTariff = newValue;
+                                      updateInterTariffVisibility(newValue);
+                                    } else {
+                                      isGiftedTarif = true;
+                                      selectedTariff = newValue;
+                                    } // Обновляем видимость полей для тарифа "Интер"
+                                  });
+                                },
+                                items: currentTariffs.entries
+                                    .map<DropdownMenuItem<String>>((entry) {
+                                  return DropdownMenuItem<String>(
+                                    value: entry.key,
+                                    child: Text(entry.value),
+                                  );
+                                }).toList())),
+                      ),
+                    )
+                  : const SizedBox(),
               (isGiftedTarif)
                   ? Padding(
                       padding: const EdgeInsets.symmetric(
@@ -380,25 +435,30 @@ class _HydraConnectState extends State<HydraConnect> {
                         ),
                         child: DropdownButtonHideUnderline(
                             child: DropdownButton<String>(
-                          value: selectedTarifForNextMonth,
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              // selectedTariff = newValue;
-                              selectedTarifForNextMonth = newValue;
-                              // updateInterTariffVisibility(
-                              //     newValue); // Обновляем видимость полей для тарифа "Интер"
-                            });
-                          },
-                          items: tariffs.entries
-                              .map<DropdownMenuItem<String>>((entry) {
-                                return DropdownMenuItem<String>(
-                                  value: entry.key,
-                                  child: Text(entry.value),
-                                );
-                              })
-                              .toList()
-                              .sublist(0, 10),
-                        )),
+                              isExpanded: true,
+                                hint: const Text("Выберите тариф на следующий месяц"),
+                                disabledHint: const Text("Выберите тариф на следующий месяц"),
+                                value: currentTariffs
+                                        .containsKey(selectedTarifForNextMonth)
+                                    ? selectedTarifForNextMonth
+                                    : null,
+                                onChanged: (String? newValue) {
+                                  setState(() {
+                                    // selectedTariff = newValue;
+                                    selectedTarifForNextMonth = newValue;
+                                    // updateInterTariffVisibility(
+                                    //     newValue); // Обновляем видимость полей для тарифа "Интер"
+                                  });
+                                },
+                                items: currentTariffs.entries
+                                    .map<DropdownMenuItem<String>>((entry) {
+                                      return DropdownMenuItem<String>(
+                                        value: entry.key,
+                                        child: Text(entry.value),
+                                      );
+                                    })
+                                    .toList()
+                                    .sublist(0, currentTariffs.length - 1))),
                       ),
                     )
                   : const SizedBox(),
@@ -497,7 +557,7 @@ class _HydraConnectState extends State<HydraConnect> {
                   },
                 ),
               ),
-           
+
               Column(
                 children: [
                   Padding(
@@ -637,16 +697,23 @@ class _HydraConnectState extends State<HydraConnect> {
                 onPressed: macAddressController.text.length == 17
                     ? () {
                         if (_formKey.currentState!.validate()) {
-                          autoConnect(
-                              macAddressController.text,
-                              isGiftedTarif
-                                  ? selectedTarifForNextMonth ?? ""
-                                  : selectedTariff!,
-                              accountNumberController.text,
-                              phoneController.text,
-                              accountNumberControllerur.text,
-                              phoneControllerur.text,
-                              selectedTarifForNextMonth);
+                          sendMacDataWithAddress(
+                              macAddress: macAddressController.text,
+                              selectedTariff: selectedTariff!,
+                              accaunt: accountNumberController.text,
+                              tv: phoneController.text,
+                              accaunt_ur: accountNumberControllerur.text,
+                              tel_ur: phoneControllerur.text);
+                          // autoConnect(
+                          // macAddressController.text,
+                          // isGiftedTarif
+                          //     ? selectedTarifForNextMonth ?? ""
+                          //     : selectedTariff!,
+                          // accountNumberController.text,
+                          // phoneController.text,
+                          // accountNumberControllerur.text,
+                          // phoneControllerur.text,
+                          // selectedTarifForNextMonth);
                         }
                       }
                     : null, // Кнопка становится неактивной, если длина текста не равна 17

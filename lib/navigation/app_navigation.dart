@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path/path.dart';
 import 'package:planup/news/data/models/news_list_model.dart';
 import 'package:planup/page3.dart';
 import 'package:planup/study/data/models/video_model.dart';
@@ -324,7 +325,9 @@ class AppNavigation {
                 return TradeGoodsScreen(
                   statusId: state.uri.queryParameters["statusId"] ?? "1",
                   goodID: state.uri.queryParameters["goodId"] ?? "",
-                  isMultipleTrade: (state.uri.queryParameters["isMultipleTrade"]?.toLowerCase() == 'true'),
+                  isMultipleTrade: (state.uri.queryParameters["isMultipleTrade"]
+                          ?.toLowerCase() ==
+                      'true'),
                   goodsList: state.extra as List<Trade>,
                 );
               },
@@ -367,7 +370,8 @@ class AppNavigation {
                     photoFile = File(photoPath);
                   }
                   return DetailedInfoScreen(
-                    photoFromBackend: state.uri.queryParameters["photoFromBackend"],
+                    photoFromBackend:
+                        state.uri.queryParameters["photoFromBackend"],
                     manufacture: state.uri.queryParameters["manufacture"] ?? "",
                     model: state.uri.queryParameters["model"] ?? "",
                     cost: state.uri.queryParameters["cost"] ?? "",
@@ -378,7 +382,7 @@ class AppNavigation {
                     deleted: state.uri.queryParameters["deleted"] ?? "",
                     nazvanieID: state.uri.queryParameters["nazvanieID"] ?? "",
                     goodStatus: state.uri.queryParameters["goodStatus"] ?? "",
-                    statusId:  state.uri.queryParameters["statusId"] ?? "1",
+                    statusId: state.uri.queryParameters["statusId"] ?? "1",
                   );
                 },
                 routes: [

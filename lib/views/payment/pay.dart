@@ -426,7 +426,7 @@ class _PayState extends State<Pay> {
                                         "service_type": widget.type,
                                         "comment": commentController.text
                                       });
-                                  // print(response.statusCode);
+                                  print(response.statusCode);
                                   if (response.statusCode == 200) {
                                     var data = jsonDecode(
                                         utf8.decode(response.bodyBytes));

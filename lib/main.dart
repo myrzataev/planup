@@ -83,6 +83,8 @@ import 'package:planup/tmc/presentation/blocs/login_bloc/login_bloc.dart';
 import 'package:planup/tmc/presentation/blocs/trade_multiple_goods_bloc/trade_multiple_goods_bloc.dart';
 import 'package:planup/tmc/presentation/blocs/transfer_good_bloc/transfer_good_bloc.dart';
 import 'package:planup/tmc/presentation/providers/user_role_provider.dart';
+import 'package:planup/views/home/blocs/send_pdf_bloc/send_pdf_bloc.dart';
+import 'package:planup/views/home/repositories/send_pdf_repo.dart';
 import 'package:planup/views/start.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -381,7 +383,10 @@ class MyApp extends StatelessWidget {
         RepositoryProvider(
             create: (context) => TradeMultipleGoodsImpl(
                 dataSource:
-                    RepositoryProvider.of<TradeMultipleGoodsDs>(context)))
+                    RepositoryProvider.of<TradeMultipleGoodsDs>(context))),
+        RepositoryProvider(
+            create: (context) => SendPdfRepo(
+                dio: RepositoryProvider.of<DioSettings>(context).dio3))
       ],
       child: MultiBlocProvider(
         providers: [
@@ -469,7 +474,10 @@ class MyApp extends StatelessWidget {
           BlocProvider(
               create: (context) => TradeMultipleGoodsBloc(
                   repoImpl:
-                      RepositoryProvider.of<TradeMultipleGoodsImpl>(context)))
+                      RepositoryProvider.of<TradeMultipleGoodsImpl>(context))),
+          BlocProvider(
+              create: (context) => SendPdfBloc(
+                  repo: RepositoryProvider.of<SendPdfRepo>(context)))
         ],
         child: MultiProvider(
           providers: [

@@ -8,7 +8,7 @@ import 'package:planup/viewimage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:gallery_saver/gallery_saver.dart';
+// import 'package:gallery_saver/gallery_saver.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:planup/views/home/closedservice.dart';

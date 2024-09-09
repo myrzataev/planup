@@ -1,18 +1,26 @@
-import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:dartz/dartz_unsafe.dart';
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
+import 'package:path_provider/path_provider.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:planup/core/services/pdf_service.dart';
+import 'dart:typed_data';
 import 'package:planup/viewimage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:gallery_saver/gallery_saver.dart';
+import 'package:planup/views/home/blocs/send_pdf_bloc/send_pdf_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:image/image.dart' as img;
 
 import 'connecthydra.dart';
 import 'myservice.dart';
@@ -37,6 +45,8 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
   // late String? _selectedOption;
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _commentFormKey = GlobalKey<FormState>();
+  bool isWaitingForStart = false;
 
   List<dynamic> statuses = []; // Объявление списка статусов
   Map<String, String> selectedStatus = {};
@@ -45,8 +55,17 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
   late List<Widget> reportWidgets;
   late List<Widget> reportWidgetsdone;
   late List<Widget> infoWidgets;
+  List<dynamic> checkBockslist = [];
+  List<dynamic> checkBockslistFinal = [];
+  Set<String> selectedCheckBoxCategories = {};
+  Map<String, Set> selectedCheckBoxCategoriesToSend =
+      {}; // Updated to use a Map
+
   Map<String, File> capturedImages = {}; // Updated to use a Map
   final storage = FlutterSecureStorage();
+  TextEditingController commentForPausingController = TextEditingController();
+  bool isConvertingPdf = false;
+  late PdfService _pdfService;
   final List<String> requiredTextFields = [
     'Отчет исполнителя абонентская муфта',
     'Отчет исполнителя проделанные работы (П)',
@@ -59,6 +78,8 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
   final List<String> requiredPhotoFields = [
     'Отчет исполнителя фото бланка-наряда1:'
   ];
+  final ImagePicker _picker = ImagePicker();
+  final List<File?> _images = List<File?>.filled(6, null);
 
   Map<String, TextEditingController> reportControllers =
       {}; // Для хранения контроллеров
@@ -115,11 +136,13 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
       {}; // Для хранения вариантов выбора
   Map<String, String> selectedValues =
       {}; // Хранит текущие выбранные значения для выпадающих списков
+  Map<String, String> checkboxOptions = {};
 
   @override
   void initState() {
+    _pdfService = PdfService();
     super.initState();
-    print('Form key initialized: ${_formKey.currentState}');
+    // print('Form key initialized: ${_formKey.currentState}');
 
     fetchStatuses().then((loadedStatuses) {
       setState(() {
@@ -129,31 +152,247 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
       // Обработка ошибок, например, показать сообщение пользователю
       print('Error fetching statuses: $error');
     });
-
     final workFieldsMap =
         widget.workOrder.dynamicFields['work_fields'] as Map<String, dynamic>;
 
+    // workFieldsMap.entries.forEach((entry) {
+    //   final innerWorkFieldsMap = entry.value as Map<String, dynamic>;
+    //   innerWorkFieldsMap.entries
+    //       .where((innerEntry) => innerEntry.key.contains('Отчет'))
+    //       .forEach((innerEntry) {
+    //     final sendKey = innerEntry.key;
+    //     final reportData = innerEntry.value;
+
+    //     if (reportData is Map<String, dynamic>) {
+    //       reportData.forEach((key, value) {
+    //         if (value is List) {
+    //           // Обработка списка значений для первого dropdown
+    //           List<DropdownMenuItem<String>> items = [
+    //             DropdownMenuItem<String>(
+    //               value: 'default', // Статическое значение по умолчанию
+    //               child:
+    //                   Text('Выберите опцию'), // Описание статического элемента
+    //             ),
+    //             ...value.map((item) {
+    //               final id = item['VALUE'].toString();
+    //               final text = item['VALUE'].toString();
+    //               return DropdownMenuItem<String>(
+    //                 value: id,
+    //                 child: Text(text),
+    //               );
+    //             }).toList()
+    //           ];
+
+    //           enumerationOptions[sendKey] = items;
+
+    //           // Установка начального значения в 'default'
+    //           selectedValues[sendKey] = 'default';
+    //         } else {
+    //           // Убедитесь, что value является строкой
+    //           if (value is String) {
+    //             String correctedString = value.replaceAll("'", "\"");
+
+    //             try {
+    //               // Десериализация JSON
+    //               List<dynamic> values = json.decode(correctedString);
+
+    //               if (values is List) {
+    //                 // Создание элементов для первого dropdown
+    //                 List<DropdownMenuItem<String>> items = [
+    //                   const DropdownMenuItem<String>(
+    //                     value: 'default',
+    //                     child: Text('Выберите опцию'),
+    //                   ),
+    //                 ];
+
+    //                 for (var item in values) {
+    //                   if (item.containsKey('VALUE')) {
+    //                     final id = item['VALUE'].toString();
+    //                     final text = item['VALUE'].toString();
+    //                     items.add(DropdownMenuItem<String>(
+    //                       value: id,
+    //                       child: Text(text),
+    //                     ));
+    //                   } else {
+    //                     // Обработка, если ключ 'VALUE' отсутствует
+    //                     item.forEach((key, value) {
+    //                       if ([
+    //                         'Нет',
+    //                         'Обрыв (3)',
+    //                         'Улучшение сигналов (5)',
+    //                         'Замена оборудования (1)',
+    //                         'Перенос оборудования (4)',
+    //                         'Настройка оборудования (2)',
+    //                         'Установка доп. оборудования (6)'
+    //                       ].contains(key)) {
+    //                         items.add(DropdownMenuItem<String>(
+    //                           value: key,
+    //                           child: Text(key),
+    //                         ));
+    //                       }
+    //                     });
+    //                   }
+    //                 }
+
+    //                 // Сохранение созданных элементов в структуру данных
+    //                 enumerationOptions[sendKey] = items;
+    //                 selectedValues[sendKey] = 'default';
+
+    //                 // Логика для открытия диалога при выборе элемента
+    //                 if (selectedValues[sendKey] != null &&
+    //                     selectedValues[sendKey] != 'default') {
+    //                   final selectedKey = selectedValues[sendKey];
+    //                   final selectedItem = values.firstWhere(
+    //                       (element) => element.containsKey(selectedKey));
+
+    //                   if (selectedItem[selectedKey] is List) {
+    //                     final dialogItems = selectedItem[selectedKey] as List;
+
+    //                     // Открытие диалога с выбором значений
+    //                     showDialog(
+    //                       context: context,
+    //                       builder: (BuildContext context) {
+    //                         return AlertDialog(
+    //                           title: Text("Выберите опции"),
+    //                           content: SingleChildScrollView(
+    //                             child: ListBody(
+    //                               children: dialogItems
+    //                                   .map((item) => CheckboxListTile(
+    //                                         title: Text(item.toString()),
+    //                                         value: dialogItems
+    //                                             .contains(item.toString()),
+    //                                         onChanged: (bool? value) {
+    //                                           if (value != null && value) {
+    //                                             dialogItems
+    //                                                 .add(item.toString());
+    //                                           } else {
+    //                                             dialogItems
+    //                                                 .remove(item.toString());
+    //                                           }
+    //                                           setState(() {});
+    //                                         },
+    //                                       ))
+    //                                   .toList(),
+    //                             ),
+    //                           ),
+    //                           actions: <Widget>[
+    //                             TextButton(
+    //                               child: Text('OK'),
+    //                               onPressed: () {
+    //                                 Navigator.of(context).pop();
+    //                               },
+    //                             ),
+    //                           ],
+    //                         );
+    //                       },
+    //                     );
+    //                   }
+    //                 }
+    //               } else {
+    //                 // Обработка, если декодированное значение не является списком
+    //                 reportControllers[sendKey] =
+    //                     TextEditingController(text: value);
+    //               }
+    //             } catch (e) {
+    //               // Обработка ошибки десериализации
+    //               reportControllers[sendKey] =
+    //                   TextEditingController(text: value);
+    //             }
+    //           } else {
+    //             // Если value не является строкой, напрямую используем как текст контроллера
+    //             reportControllers[sendKey] =
+    //                 TextEditingController(text: value.toString());
+    //           }
+    //         }
+    //       });
+    //     }
+    //   });
+    // });
+
     workFieldsMap.entries.forEach((entry) {
       final innerWorkFieldsMap = entry.value as Map<String, dynamic>;
+
       innerWorkFieldsMap.entries
           .where((innerEntry) => innerEntry.key.contains('Отчет'))
           .forEach((innerEntry) {
         final sendKey = innerEntry.key;
         final reportData = innerEntry.value;
 
-        if (reportData is Map<String, dynamic>) {
+        // print("Processing key: $sendKey");
+        // print("Processing reportData: $reportData");
+
+        if (sendKey.contains("Отчет исполнителя виды работ")) {
+          print("entering here");
+          print(reportData.runtimeType);
+          try {
+            // Convert to a List of Strings if not already in list form
+            checkBockslist = reportData.values.map((value) {
+              print("runtime type of value is ${value.runtimeType}");
+
+              if (value is Map<String, dynamic>) {
+                return value["VALUE"]?.toString() ?? "";
+              } else if (value is String) {
+                // Check if the string is in JSON format or just a plain list of strings
+                print("Value is a string: $value");
+
+                // Attempt to decode JSON if it's in list format
+                try {
+                  String correctedString = value.replaceAll("'", "\"");
+                  var decodedValue = jsonDecode(correctedString);
+
+                  if (decodedValue is List<dynamic>) {
+                    // Process list if valid JSON
+                    return decodedValue
+                        .map((item) {
+                          if (item is Map<String, dynamic>) {
+                            return item["VALUE"]?.toString() ?? "";
+                          }
+                          return "";
+                        })
+                        .toList()
+                        .join(", ");
+                  } else {
+                    // If JSON decoding fails or it's not a list
+                    return value;
+                  }
+                } catch (e) {
+                  print("Error decoding JSON: $e");
+                  // Handle value as a plain string if JSON decoding fails
+                  return value;
+                }
+              }
+              return "";
+            }).toList();
+
+            // Handle case where `checkBockslist` is a list of strings
+            print("Decoded checkBockslist: $checkBockslist");
+
+            // Assuming `checkBockslist` is now a list of strings
+            checkBockslistFinal = checkBockslist.first
+                .toString()
+                .split(",")
+                .map((item) => item.trim())
+                .toList();
+            selectedCheckBoxCategoriesToSend[sendKey] =
+                selectedCheckBoxCategories;
+            // Assign directly if it's already in the desired format
+            print("Assigned checkBockslistFinal: ${checkBockslistFinal.first}");
+          } catch (e) {
+            print("//////error is ${e.toString()}");
+          }
+
+          // Handling checkboxes
+        } else if (reportData is Map<String, dynamic>) {
           reportData.forEach((key, value) {
             if (value is List) {
-              // Обработка списка значений для dropdown
+              // Process list values for dropdown
               List<DropdownMenuItem<String>> items = [
                 DropdownMenuItem<String>(
-                  value: 'default', // Статическое значение по умолчанию
-                  child:
-                      Text('Выберите опцию'), // Описание статического элемента
+                  value: 'default',
+                  child: Text('Выберите опцию'),
                 ),
                 ...value.map((item) {
                   final id = item['VALUE'].toString();
-
                   final text = item['VALUE'].toString();
                   return DropdownMenuItem<String>(
                     value: id,
@@ -163,54 +402,41 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
               ];
 
               enumerationOptions[sendKey] = items;
-
-              // Установка начального значения в 'default'
               selectedValues[sendKey] = 'default';
-            } else {
-              // Убедитесь, что value является строкой
-              if (value is String) {
-                String correctedString = value.replaceAll("'", "\"");
+            } else if (value is String) {
+              // Handle string values (possibly JSON-encoded list)
+              String correctedString = value.replaceAll("'", "\"");
+              try {
+                List<dynamic> values = json.decode(correctedString);
+                if (values is List) {
+                  List<DropdownMenuItem<String>> items = [
+                    DropdownMenuItem<String>(
+                      value: 'default',
+                      child: Text('Выберите опцию'),
+                    ),
+                    ...values.map<DropdownMenuItem<String>>((item) {
+                      final id = item['VALUE'].toString();
+                      final text = item['VALUE'].toString();
+                      return DropdownMenuItem<String>(
+                        value: id,
+                        child: Text(text),
+                      );
+                    }).toList(),
+                  ];
 
-                try {
-                  // Десериализация JSON всего один раз
-                  List<dynamic> values = json.decode(correctedString);
-
-                  if (values is List) {
-                    // Создание списка DropdownMenuItem из декодированного списка
-                    List<DropdownMenuItem<String>> items = [
-                      DropdownMenuItem<String>(
-                        value: 'default',
-                        child: Text('Выберите опцию'),
-                      ),
-                      ...values.map<DropdownMenuItem<String>>((item) {
-                        final id = item['VALUE']
-                            .toString(); // Используйте 'ID' для value
-                        final text = item['VALUE'].toString();
-                        return DropdownMenuItem<String>(
-                          value: id,
-                          child: Text(text),
-                        );
-                      }).toList(),
-                    ];
-
-                    // Сохранение созданных элементов в структуры данных для дальнейшего использования
-                    enumerationOptions[sendKey] = items;
-                    selectedValues[sendKey] = 'default';
-                  } else {
-                    // Обработка, если декодированное значение не является списком
-                    // print("Декодированное значение не является списком");
-                  }
-                } catch (e) {
-                  // Обработка ошибки десериализации
-                  // print("Ошибка при десериализации JSON: $e");
-                  reportControllers[sendKey] =
-                      TextEditingController(text: value);
+                  enumerationOptions[sendKey] = items;
+                  selectedValues[sendKey] = 'default';
+                } else {
+                  print("Decoded value is not a list");
                 }
-              } else {
-                // Если value не является строкой, напрямую используем как текст контроллера
-                reportControllers[sendKey] =
-                    TextEditingController(text: value.toString());
+              } catch (e) {
+                print("Error decoding JSON: $e");
+                reportControllers[sendKey] = TextEditingController(text: value);
               }
+            } else {
+              // Handle any other type as a text field
+              reportControllers[sendKey] =
+                  TextEditingController(text: value.toString());
             }
           });
         }
@@ -465,8 +691,10 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
             TextButton(
               child: Text('Да'),
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-                onConfirm(); // Perform the confirmed action
+                // Close the dialog
+                onConfirm();
+                Navigator.of(context).pop();
+                // Perform the confirmed action
               },
             ),
           ],
@@ -484,12 +712,12 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
     );
   }
 
-  void _pauseWithConfirmation() {
-    _showConfirmationDialog(
-      'Вы уверены, что хотите приостановить?',
-      _pause, // This is the original action method
-    );
-  }
+  // void _pauseWithConfirmation() {
+  //   _showConfirmationDialog(
+  //     'Вы уверены, что хотите приостановить?',
+  //     _pause, // This is the original action method
+  //   );
+  // }
 
   void _startWithConfirmation() {
     _showConfirmationDialog(
@@ -502,8 +730,192 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
   void _endWithConfirmation() {
     _showConfirmationDialog(
       'Вы уверены, что хотите завершить наряд?',
-      () => _showCompletionDialog(), // Показать диалог завершения наряда
+      () =>
+          //  _showPhotoContract()
+          _showCompletionDialog(), // Показать диалог завершения наряда
     );
+  }
+
+  void showPhotoContract(String lsAbonent) {
+    showDialog(
+        context: context,
+        builder: (context) => StatefulBuilder(
+              builder: (context, setState) {
+                return AlertDialog(
+                  title: const Text("Фото договора"),
+                  actions: [
+                    Column(
+                      children: [
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.70,
+                          child: ListView.separated(
+                            separatorBuilder: (context, index) {
+                              return const SizedBox(
+                                height: 10,
+                              );
+                            },
+                            itemCount: 6,
+                            itemBuilder: (context, index) {
+                              return DottedBorder(
+                                borderType: BorderType.RRect,
+                                radius: const Radius.circular(12),
+                                padding: const EdgeInsets.all(6),
+                                child: ClipRRect(
+                                  borderRadius: const BorderRadius.all(
+                                      Radius.circular(12)),
+                                  child: InkWell(
+                                    onTap: () {
+                                      showDialog(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                                title: const Text(
+                                                    "Источник изображения"),
+                                                actions: [
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceEvenly,
+                                                    children: [
+                                                      TextButton(
+                                                          onPressed: () async {
+                                                            await pickImage(
+                                                                isFromCamera:
+                                                                    false,
+                                                                index: index,
+                                                                setState:
+                                                                    setState);
+                                                            Navigator.pop(
+                                                                // ignore: use_build_context_synchronously
+                                                                context);
+                                                          },
+                                                          child: const Text(
+                                                              "Галерея")),
+                                                      TextButton(
+                                                          onPressed: () async {
+                                                            await pickImage(
+                                                                isFromCamera:
+                                                                    true,
+                                                                setState:
+                                                                    setState,
+                                                                index: index);
+                                                            Navigator.pop(
+                                                                // ignore: use_build_context_synchronously
+                                                                context);
+                                                          },
+                                                          child: const Text(
+                                                              "Камера"))
+                                                    ],
+                                                  )
+                                                ],
+                                              ));
+                                    },
+                                    child: SizedBox(
+                                      height: 200,
+                                      width: MediaQuery.of(context).size.width *
+                                          0.7,
+                                      child: _images[index] != null
+                                          ? Image.file(
+                                              height: 200,
+                                              _images[index]!,
+                                              fit: BoxFit.cover,
+                                            )
+                                          : const Center(
+                                              child: Icon(
+                                                Icons.add_a_photo,
+                                                size: 50,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        BlocConsumer<SendPdfBloc, SendPdfState>(
+                          listener: (context, state) {
+                            if (state is SendPdfSuccess) {
+                              setState(
+                                () {
+                                  isConvertingPdf = false;
+                                },
+                              );
+                              Navigator.pop(context);
+                              _endWithConfirmation();
+                            } else if (state is SendPdfError) {
+                              setState(
+                                () {
+                                  isConvertingPdf = false;
+                                },
+                              );
+                              Navigator.pop(context);
+                              _endWithConfirmation();
+                            }
+                          },
+                          builder: (context, state) {
+                            if (state is SendPdfLoading) {
+                              return const CircularProgressIndicator();
+                            }
+                            return isConvertingPdf != true
+                                ? ElevatedButton(
+                                    onPressed: areAllImagesSelected()
+                                        ? () async {
+                                            setState(
+                                              () {
+                                                isConvertingPdf = true;
+                                              },
+                                            );
+                                            File pdf = await _pdfService
+                                                .createAndCompressPdf(_images,
+                                                    fileName: lsAbonent);
+                                            // await createPdf();
+                                            // ignore: use_build_context_synchronously
+                                            BlocProvider.of<SendPdfBloc>(
+                                                    // ignore: use_build_context_synchronously
+                                                    context)
+                                                .add(SendPdfEvent(
+                                                    lsAbonent: lsAbonent,
+                                                    pdf: pdf));
+                                          }
+                                        : null,
+                                    style: ButtonStyle(
+                                      backgroundColor: WidgetStateProperty
+                                          .resolveWith<Color>(
+                                        (Set<WidgetState> states) {
+                                          if (states
+                                              .contains(WidgetState.disabled)) {
+                                            return Colors
+                                                .grey; // Color when disabled
+                                          }
+                                          return Colors
+                                              .blue; // Color when enabled
+                                        },
+                                      ),
+                                      foregroundColor: WidgetStateProperty
+                                          .resolveWith<Color>(
+                                        (Set<WidgetState> states) {
+                                          if (states
+                                              .contains(WidgetState.disabled)) {
+                                            return Colors
+                                                .white60; // Text color when disabled
+                                          }
+                                          return Colors
+                                              .white; // Text color when enabled
+                                        },
+                                      ),
+                                    ),
+                                    child: const Text("Отправить"),
+                                  )
+                                : const CircularProgressIndicator();
+                          },
+                        )
+                      ],
+                    )
+                  ],
+                );
+              },
+            ));
   }
 
   Future<List<dynamic>> fetchStatuses() async {
@@ -577,6 +989,7 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
                 if (commentController.text.trim().isNotEmpty) {
                   Navigator.of(context)
                       .pop(); // Закрыть диалог перед отправкой данных
+
                   sendReportData();
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -643,6 +1056,11 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
     reportControllers.forEach((key, controller) {
       formData.fields.add(MapEntry(key, controller.text));
     });
+    selectedCheckBoxCategoriesToSend.forEach(
+      (key, value) {
+        formData.fields.add(MapEntry(key, value.toString()));
+      },
+    );
 
     // Добавление изображений (файлов) без изменений
     capturedImages.forEach((fileKey, file) {
@@ -669,7 +1087,9 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
     formData.files.forEach((file) {
       print('Sending File: ${file.key} - ${file.value.filename}');
     });
-
+    // formData.fields.forEach((action){
+    // print('Sending : ${action.key} - ${action.value}');
+    // });
     try {
       var response = await dio.post(
         'http://planup.skynet.kg:8000/planup/planup_ended/',
@@ -756,6 +1176,10 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
   }
 
   Future<void> _go() async {
+    print("///////////starting");
+    // setState(() {
+    //   isWaitingForStart = true;
+    // });
     final username = await storage.read(key: 'user_id');
     try {
       final uri = Uri.parse('http://planup.skynet.kg:8000/planup/planup_go/');
@@ -765,9 +1189,14 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
         'naryd_id': '${widget.workOrder.dynamicFields['id']}'
       };
       final response = await http.post(uri, headers: headers, body: body);
+      print("'''''efewfmekrmfk;m''''''");
 
+      debugPrint("hello status code is ${response.statusCode}");
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        setState(() {
+          isWaitingForStart = false;
+        });
         print(data);
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -788,7 +1217,7 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
     }
   }
 
-  Future<void> _pause() async {
+  Future<void> _pause(String comment) async {
     final username = await storage.read(key: 'user_id');
     try {
       final uri =
@@ -796,7 +1225,8 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
       final headers = {'Content-Type': 'application/x-www-form-urlencoded'};
       final body = {
         'user_id': '$username',
-        'naryd_id': '${widget.workOrder.dynamicFields['id']}'
+        'naryd_id': '${widget.workOrder.dynamicFields['id']}',
+        "comment_bx": comment
       };
 
       final response = await http.post(uri, headers: headers, body: body);
@@ -814,6 +1244,7 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
             content: Text('Статус успешно сменен'),
           ),
         );
+        context.goNamed("Главная");
       } else {
         print('Ошибка при запросе данных: ${response.statusCode}');
       }
@@ -890,276 +1321,9 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
   // late String? _errorText;
   @override
   Widget build(BuildContext context) {
-    print('Building widget, form key state: ${_formKey.currentState}');
-
     var statusInfo = getStatusMessage(statusWorkId);
     var statusColor = getStatusColor(statusWorkId);
 
-    // reportWidgets =
-    //     (widget.workOrder.dynamicFields['work_fields'] as Map<String, dynamic>)
-    //         .entries
-    //         .where((entry) => entry.key.contains('Отчет'))
-    //         .map((entry) {
-    //   final displayedKey = entry.key
-    //       .replaceFirstMapped(RegExp(r'.UF_CRM.*$'), (match) => '')
-    //       .trim();
-    //   final sendKey = entry.key
-    //       .replaceFirstMapped(RegExp(r'^.*UF'), (match) => 'UF')
-    //       .trim();
-
-    //   final isPhoto = entry.key.contains('фото');
-    //   final isNumpad = entry.key.contains('ODF') ||
-    //       !entry.key.contains('работы') ||
-    //       entry.key.contains('ОВ1') ||
-    //       entry.key.contains('UTP') ||
-    //       entry.key.contains('Лицевой счет') ||
-    //       entry.key.contains('Коннектор') ||
-    //       entry.key.contains('Кронштейн') ||
-    //       entry.key.contains('муфте') ||
-    //       entry.key.contains('RCA') ||
-    //       entry.key.contains('оплаченная');
-    //   final isShowUrls = entry.value is String && entry.value.contains('https');
-
-    //   if (isPhoto) {
-    //     // Обработка полей с фотографиями
-    //     return ListTile(
-    //       leading: Icon(Icons.camera_alt),
-    //       title: Text(displayedKey),
-    //       subtitle: widget.workOrder.dynamicFields[sendKey] != null
-    //           ? Image.file(File(widget.workOrder.dynamicFields[
-    //               sendKey])) // Show the captured image if available
-    //           : Text('Сделать фото'),
-    //       onTap: () {
-    //         _captureImage(sendKey); // Capture an image when tapped
-    //       },
-    //       trailing: widget.workOrder.dynamicFields[sendKey] != null
-    //           ? IconButton(
-    //               icon: Icon(Icons.camera_alt),
-    //               onPressed: () {
-    //                 _captureImage(
-    //                     sendKey); // Capture an image when the button is pressed
-    //               },
-    //             )
-    //           : null,
-    //     );
-    //   } else if (isShowUrls) {
-    //     return ListTile(
-    //       leading: Icon(Icons.image),
-    //       title: Text(displayedKey),
-    //       subtitle: Text(entry.value),
-    //       onTap: () {
-    //         if (isShowUrls) {
-    //           _showImageDialog(entry.value);
-    //         }
-    //       },
-    //     );
-    //   } else if (enumerationOptions.containsKey(sendKey)) {
-    //     // Создаем DropdownButtonFormField
-    //     return Column(
-    //       children: [
-    //         ListTile(
-    //           title: DropdownButtonFormField<String>(
-    //             validator: (value) {
-    //               if (value == null || value.isEmpty || value == "default") {
-    //                 return "Пожалуйста заполните все поля";
-    //               }
-    //               return null;
-    //             },
-    //             value: selectedValues[sendKey],
-    //             style: TextStyle(
-    //                 overflow: TextOverflow.ellipsis, color: Colors.black),
-    //             onChanged: (newValue) {
-    //               print(newValue);
-    //               setState(() {
-    //                 selectedValues[sendKey] = newValue ?? '';
-    //                 // _errorText = null;
-    //               });
-    //             },
-    //             items: enumerationOptions[sendKey],
-    //             // hint: Text("choose"),
-    //             decoration: InputDecoration(
-    //               labelText: sendKey,
-    //             ),
-    //           ),
-    //         ),
-    //         // _errorText != null
-    //         //     ? Text(
-    //         //         _errorText ?? "",
-    //         //         style: const TextStyle(color: Colors.red),
-    //         //       )
-    //         //     : const SizedBox()
-    //       ],
-    //     );
-    //   } else if (isNumpad) {
-    //     // Создаем TextFormField
-    //     return ListTile(
-    //       title: TextFormField(
-    //         validator: (value) {
-    //           if (value == null || value.isEmpty) {
-    //             return "Пожалуйста заполните все поля";
-    //           }
-    //           return null;
-    //         },
-
-    //         controller: reportControllers[sendKey],
-    //         decoration: InputDecoration(labelText: sendKey),
-    //         keyboardType:
-    //             TextInputType.number, // Устанавливаем числовую клавиатуру
-    //       ),
-    //     );
-    //   } else {
-    //     // Создаем TextFormField
-    //     return ListTile(
-    //       title: TextFormField(
-    //         validator: (value) {
-    //           if (value == null || value.isEmpty) {
-    //             return "Пожалуйста заполните все поля";
-    //           }
-    //           return null;
-    //         },
-    //         controller: reportControllers[sendKey],
-    //         decoration: InputDecoration(labelText: sendKey),
-    //       ),
-    //     );
-    //   }
-    // }).toList();
-    // reportWidgets =
-    //     (widget.workOrder.dynamicFields['work_fields'] as Map<String, dynamic>)
-    //         .entries
-    //         .where((entry) => entry.key.contains('Отчет'))
-    //         .map((entry) {
-    //   final displayedKey = entry.key
-    //       .replaceFirstMapped(RegExp(r'.UF_CRM.*$'), (match) => '')
-    //       .trim();
-    //   final sendKey = entry.key
-    //       .replaceFirstMapped(RegExp(r'^.*UF'), (match) => 'UF')
-    //       .trim();
-
-    //   final isPhoto = entry.key.contains('фото');
-    //   final isNumpad = entry.key.contains('ODF') ||
-    //       !entry.key.contains('работы') ||
-    //       entry.key.contains('ОВ1') ||
-    //       entry.key.contains('UTP') ||
-    //       entry.key.contains('Лицевой счет') ||
-    //       entry.key.contains('Коннектор') ||
-    //       entry.key.contains('Кронштейн') ||
-    //       entry.key.contains('муфте') ||
-    //       entry.key.contains('RCA') ||
-    //       entry.key.contains('оплаченная');
-    //   final isShowUrls = entry.value is String && entry.value.contains('https');
-
-    //   // List of required fields
-    //   final requiredTextFields = [
-    //     'Отчет исполнителя абонентская муфта',
-    //     'Отчет исполнителя проделанные работы (П)',
-    //     'Отчет исполнителя магистральная муфта (шт.)',
-    //     'Отчет исполнителя № муфты с которой начали перетяжку',
-    //     'Отчет исполнителя № муфты на которой закончили перетяжку'
-    //   ];
-    //   final requiredPhotoFields = ['Отчет исполнителя фото бланка-наряда1'];
-
-    //   if (isPhoto) {
-    //     // Check if this specific photo field is required
-    //     final isRequiredPhoto =
-    //         requiredPhotoFields.any((field) => entry.key.contains(field));
-
-    //     return ListTile(
-    //       leading: const Icon(Icons.camera_alt),
-    //       title: Text(displayedKey),
-    //       subtitle: widget.workOrder.dynamicFields[sendKey] != null
-    //           ? Image.file(File(widget.workOrder.dynamicFields[
-    //               sendKey])) // Show the captured image if available
-    //           : Text(isRequiredPhoto
-    //               ? 'Сделать фото (Обязательно)'
-    //               : 'Сделать фото'),
-    //       onTap: () {
-    //         _captureImage(sendKey); // Capture an image when tapped
-    //       },
-    //       trailing: widget.workOrder.dynamicFields[sendKey] != null
-    //           ? IconButton(
-    //               icon: const Icon(Icons.camera_alt),
-    //               onPressed: () {
-    //                 _captureImage(
-    //                     sendKey); // Capture an image when the button is pressed
-    //               },
-    //             )
-    //           : null,
-    //     );
-    //   } else if (isShowUrls) {
-    //     return ListTile(
-    //       leading: Icon(Icons.image),
-    //       title: Text(displayedKey),
-    //       subtitle: Text(entry.value),
-    //       onTap: () {
-    //         if (isShowUrls) {
-    //           _showImageDialog(entry.value);
-    //         }
-    //       },
-    //     );
-    //   } else if (enumerationOptions.containsKey(sendKey)) {
-    //     // Create DropdownButtonFormField
-    //     return Column(
-    //       children: [
-    //         ListTile(
-    //           title: DropdownButtonFormField<String>(
-    //             validator: (value) {
-    //               if (value == null || value.isEmpty || value == "default") {
-    //                 return "Пожалуйста заполните все поля";
-    //               }
-    //               return null;
-    //             },
-    //             value: selectedValues[sendKey],
-    //             style: const TextStyle(
-    //                 overflow: TextOverflow.ellipsis, color: Colors.black),
-    //             onChanged: (newValue) {
-    //               print(newValue);
-    //               setState(() {
-    //                 selectedValues[sendKey] = newValue ?? '';
-    //                 // _errorText = null;
-    //               });
-    //             },
-    //             items: enumerationOptions[sendKey],
-    //             decoration: InputDecoration(
-    //               labelText: sendKey,
-    //             ),
-    //           ),
-    //         ),
-    //       ],
-    //     );
-    //   } else if (isNumpad) {
-    //     // Create TextFormField
-    //     return ListTile(
-    //       title: TextFormField(
-    //         validator: (value) {
-    //           if (value == null || value.isEmpty) {
-    //             return "Пожалуйста заполните все поля";
-    //           }
-    //           return null;
-    //         },
-    //         controller: reportControllers[sendKey],
-    //         decoration: InputDecoration(labelText: sendKey),
-    //         keyboardType: TextInputType.number, // Set the numeric keyboard
-    //       ),
-    //     );
-    //   } else {
-    //     // Create TextFormField
-    //     final isRequiredText =
-    //         requiredTextFields.any((field) => entry.key.contains(field));
-
-    //     return ListTile(
-    //       title: TextFormField(
-    //         validator: (value) {
-    //           if (isRequiredText && (value == null || value.isEmpty)) {
-    //             return "Это поле обязательно для заполнения";
-    //           }
-    //           return null;
-    //         },
-    //         controller: reportControllers[sendKey],
-    //         decoration: InputDecoration(labelText: sendKey),
-    //       ),
-    //     );
-    //   }
-    // }).toList();
     reportWidgets =
         (widget.workOrder.dynamicFields['work_fields'] as Map<String, dynamic>)
             .entries
@@ -1173,6 +1337,7 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
           .trim();
 
       final isPhoto = entry.key.contains('фото');
+      final isCheckBox = entry.key.contains("Отчет исполнителя виды работ");
       final isNumpad = entry.key.contains('ODF') ||
           !entry.key.contains('работы') ||
           entry.key.contains('ОВ1') ||
@@ -1209,7 +1374,7 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
           },
           trailing: widget.workOrder.dynamicFields[sendKey] != null
               ? IconButton(
-                  icon: Icon(Icons.camera_alt),
+                  icon: const Icon(Icons.camera_alt),
                   onPressed: () {
                     _captureImage(sendKey);
                   },
@@ -1219,7 +1384,7 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
       } else if (isShowUrls) {
         // Handling fields displaying URLs
         return ListTile(
-          leading: Icon(Icons.image),
+          leading: const Icon(Icons.image),
           title: Text(displayedKey),
           subtitle: Text(entry.value),
           onTap: () {
@@ -1228,6 +1393,111 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
             }
           },
         );
+      } else if (isCheckBox) {
+        // List<dynamic> checksList = jsonDecode(checkBockslist.first);
+        // Handle checkbox
+        checkboxOptions[sendKey] ??= 'unchecked';
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Column(
+            children: [
+              const Text("Нажмите сюда для выборки виды работ"),
+              SizedBox(
+                width: MediaQuery.of(context).size.width * 0.95,
+                child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blueAccent),
+                    onPressed: () {
+                      showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                                content: StatefulBuilder(
+                                  builder: (context, setState) {
+                                    return SizedBox(
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                                0.7,
+                                        width: 400,
+                                        child: ListView.builder(
+                                          itemCount: checkBockslistFinal.length,
+                                          itemBuilder: (context, index) {
+                                            final item =
+                                                checkBockslistFinal[index];
+                                            String itemString = item.toString();
+                                            bool isSelected =
+                                                selectedCheckBoxCategories
+                                                    .contains(itemString);
+
+                                            print(itemString);
+                                            return CheckboxListTile(
+                                              title: Text(
+                                                  itemString), // Ensure item.toString() is appropriate
+                                              value: isSelected,
+                                              onChanged: (bool? value) {
+                                                if (value == null) {
+                                                  return; // Handle null case if needed
+                                                } else if (value == true) {
+                                                  setState(() {
+                                                    selectedCheckBoxCategories
+                                                        .add(itemString);
+                                                  });
+                                                } else {
+                                                  setState(() {
+                                                    selectedCheckBoxCategories
+                                                        .remove(itemString);
+                                                  });
+                                                }
+
+                                                print(
+                                                    "Selected items: $selectedCheckBoxCategories"); // Debug output
+                                              },
+                                            );
+                                          },
+                                        ));
+                                  },
+                                ),
+                                actions: [
+                                  MaterialButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    color: Colors.red,
+                                    child: const Text("Отмена"),
+                                  ),
+                                  MaterialButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    color: Colors.green,
+                                    child: const Text("Подтвердить"),
+                                  ),
+                                ],
+                              ));
+                    },
+                    child: Text(
+                      sendKey,
+                      style: const TextStyle(color: Colors.white),
+                    )),
+              ),
+            ],
+          ),
+        );
+        // return ListTile(
+        //   title: Row(
+        //     children: [
+        //       Checkbox(
+        //         value: selectedValues[sendKey] == 'checked',
+        //         onChanged: (bool? newValue) {
+        //           setState(() {
+        //             selectedValues[sendKey] =
+        //                 newValue == true ? 'checked' : 'unchecked';
+        //           });
+        //         },
+        //       ),
+        //       Text(displayedKey),
+        //     ],
+        //   ),
+        // );
       } else if (enumerationOptions.containsKey(sendKey)) {
         // Creating DropdownButtonFormField
         return Column(
@@ -1245,7 +1515,7 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
                       }
                     : null,
                 value: selectedValues[sendKey],
-                style: TextStyle(
+                style: const TextStyle(
                     overflow: TextOverflow.ellipsis, color: Colors.black),
                 onChanged: (newValue) {
                   setState(() {
@@ -1444,6 +1714,11 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
                   },
                   child: Text('Подключить'),
                 ),
+              // ElevatedButton(
+              //     onPressed: () {
+              //       print(selectedCheckBoxCategories.toList());
+              //     },
+              //     child: Text("123"))
             ],
           ),
           bottom: const TabBar(
@@ -1542,29 +1817,76 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
                 ElevatedButton(
                   onPressed: _goWithConfirmation,
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                  child: const Text('Выехать',
-                      style: TextStyle(color: Colors.white)),
+                  child: isWaitingForStart
+                      ? const CircularProgressIndicator()
+                      : const Text('Выехать',
+                          style: TextStyle(color: Colors.white)),
                 ),
               // Если статус "В пути" (statusWorkId == '2'), отображаем кнопку "Начать"
               if (statusWorkId == '2')
                 ElevatedButton(
                   onPressed: _startWithConfirmation,
-                  child: Text('Начать', style: TextStyle(color: Colors.white)),
                   style:
                       ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  child: const Text('Начать',
+                      style: TextStyle(color: Colors.white)),
                 ),
               // Если статус "Наряд начат" (statusWorkId == '3'), отображаем кнопки "Приостановить" и "Завершить"
               if (statusWorkId == '3') ...[
                 ElevatedButton(
-                  onPressed: _pauseWithConfirmation,
-                  child: Text('Приостановить',
-                      style: TextStyle(color: Colors.white)),
+                  // onPressed: _pauseWithConfirmation,
+                  onPressed: () {
+                    showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                              title: const Text("Комментарий"),
+                              actions: [
+                                Column(
+                                  children: [
+                                    Form(
+                                      key: _commentFormKey,
+                                      child: TextFormField(
+                                        maxLines: 7,
+                                        controller: commentForPausingController,
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return "Заполните комментарий";
+                                          }
+                                          return null;
+                                        },
+                                        decoration: const InputDecoration(
+                                          hintText: "Комментарий",
+                                          border: OutlineInputBorder(),
+                                        ),
+                                      ),
+                                    ),
+                                    MaterialButton(
+                                      color: Colors.blue,
+                                      onPressed: () {
+                                        if (_commentFormKey.currentState!
+                                            .validate()) {
+                                          _pause(
+                                              commentForPausingController.text);
+                                          Navigator.pop(context);
+                                        }
+                                      },
+                                      child: const Text("Приостановить"),
+                                    )
+                                  ],
+                                )
+                              ],
+                            ));
+                  },
                   style:
                       ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                  child: const Text('Приостановить',
+                      style: TextStyle(color: Colors.white)),
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    print("object");
+                    String? lsAbonent = widget.workOrder
+                            .dynamicFields["work_fields"]?["Лицевой счет"]
+                        ?["Лицевой счет"]?["UF_CRM_1673255771"];
                     // print(_formKey.currentState);
                     // if (_formKey.currentState!.validate()
                     // _formKeyForButton.currentState!.validate()
@@ -1572,7 +1894,13 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
                     //     // ) {
                     if (_formKey.currentState!.validate()) {
                       // If the form is valid, proceed with the desired action
-                      _endWithConfirmation();
+                      if (widget.workOrder.dynamicFields['type_deal'] ==
+                          'Подключение') {
+                        showPhotoContract(lsAbonent ?? "");
+                        // createPdf();
+                      } else {
+                        _endWithConfirmation();
+                      }
                     } else {
                       // If the form is invalid, show a message
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -1607,5 +1935,69 @@ class _WorkOrderDetailsScreenState extends State<WorkOrderDetailsScreen> {
         ),
       ),
     );
+  }
+
+  Future pickImage({
+    required bool isFromCamera,
+    required int index,
+    required StateSetter setState,
+  }) async {
+    try {
+      final image = await ImagePicker().pickImage(
+          source: isFromCamera ? ImageSource.camera : ImageSource.gallery);
+      if (image == null) return;
+      setState(() {
+        _images[index] = File(image.path);
+      });
+    } on PlatformException catch (e) {
+      // print('Failed to pick image: $e');
+    }
+  }
+
+  Future<File> createPdf() async {
+    final pdf = pw.Document();
+
+    for (var image in _images) {
+      if (image != null) {
+        // Read the image bytes
+        final imageBytes = await image.readAsBytes();
+
+        // Decode the image and resize it
+        img.Image? decodedImage = img.decodeImage(imageBytes);
+        if (decodedImage != null) {
+          // Resize the image to reduce size
+          img.Image resizedImage = img.copyResize(decodedImage,
+              width: 800); // Adjust the width as needed
+
+          // Re-encode the resized image and convert to Uint8List
+          final resizedImageBytes = Uint8List.fromList(img.encodeJpg(
+              resizedImage,
+              quality: 75)); // Adjust quality as needed
+
+          // Add the compressed image to the PDF
+          final pdfImage = pw.MemoryImage(resizedImageBytes);
+          pdf.addPage(pw.Page(
+            build: (pw.Context context) {
+              return pw.Center(child: pw.Image(pdfImage));
+            },
+          ));
+        }
+      }
+    }
+
+    final output = await getTemporaryDirectory();
+    final file = File("${output.path}/contract.pdf");
+    await file.writeAsBytes(await pdf.save());
+
+    // Check the size of the file
+    int fileSizeInBytes = await file.length();
+    double fileSizeInMB = fileSizeInBytes / (1024 * 1024);
+    print("File size: ${fileSizeInMB.toStringAsFixed(2)} MB");
+
+    return file;
+  }
+
+  bool areAllImagesSelected() {
+    return _images.every((image) => image != null);
   }
 }

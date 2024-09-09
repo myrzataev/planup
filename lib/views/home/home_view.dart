@@ -592,7 +592,7 @@ class _HomeViewState extends State<HomeView> {
                                     MaterialPageRoute(
                                         builder: (context) => WebPageScreen(
                                               urlOfWeb:
-                                                  'http://167.71.56.36:81/bonuses?id=$squares_id',
+                                                  'http://164.92.201.239:81/bonuses?id=$squares_id',
                                             )));
                                 //  context.goNamed("createservice");
                               },

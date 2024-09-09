@@ -665,6 +665,12 @@ class _OutfitScreenState extends State<OutfitScreen> {
                                   .split('|')
                                   .first ??
                               'Не указано';
+                          String? workerComment =
+                              workOrder.dynamicFields['work_fields']
+                                      ?['Комментарий СИ']?['Комментарий СИ']
+                                  ?['UF_CRM_1723708136993'];
+                          // "Комментарий отсутствует";
+
                           String transferAddress = workOrder
                                   .dynamicFields['work_fields']
                                       ?['Адрес переноса']?['Адрес переноса']
@@ -749,11 +755,24 @@ class _OutfitScreenState extends State<OutfitScreen> {
                                     ),
                                     TextSpan(
                                       text:
-                                          "Лицевой счет: ${_decider(lsListCopy[index])}",
+                                          "Лицевой счет: ${_decider(lsListCopy[index])}\n",
                                       // text: 'Лицевой счет:${_decider(listOfLsNumbers[index])}',
                                       // style: const TextStyle(
                                       //     color: Colors.green)
                                     ),
+                                    TextSpan(children: [
+                                      TextSpan(
+                                        text: (workerComment != null)
+                                            ? "Комментарий СИ: "
+                                            : "",
+                                      ),
+                                      TextSpan(
+                                          text: (workerComment != null)
+                                              ? workerComment
+                                              : "",
+                                          style: const TextStyle(
+                                              color: Color(0xff0000FE)))
+                                    ]),
                                     if (isCompleted) // Показать резолюцию, если наряд завершен
                                       TextSpan(
                                         text:
@@ -773,7 +792,6 @@ class _OutfitScreenState extends State<OutfitScreen> {
                                     ? resolutionInfo['color']
                                     : statusColor, // Цвет для резолюции или статуса
                               ),
-                            
                               onTap: () {
                                 // print(listOfRegions);
 
